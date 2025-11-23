@@ -1,4 +1,4 @@
-export async function handler(event) {
+exports.handler = async (event) => {
   const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors };
   const secret = process.env.API_SECRET || '';
@@ -85,4 +85,3 @@ export async function handler(event) {
     return error(500, String(e));
   }
 }
-

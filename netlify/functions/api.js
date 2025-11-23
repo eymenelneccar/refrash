@@ -19,10 +19,10 @@ exports.handler = async (event) => {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${key}`;
     let sha = undefined;
     try {
-      const cur = await fetch(`${url}?ref=${branch}`, { headers: { 'Authorization': `Bearer ${token}`, 'User-Agent':'netlify-functions', 'Accept':'application/vnd.github+json' } });
+      const cur = await fetch(`${url}?ref=${branch}`, { headers: { 'Authorization': `token ${token}`, 'User-Agent':'netlify-functions', 'Accept':'application/vnd.github.v3+json' } });
       if (cur.ok) { const j = await cur.json(); sha = j.sha; }
     } catch {}
-    const resp = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent':'netlify-functions', 'Accept':'application/vnd.github+json' }, body: JSON.stringify({ message: `update ${key}`, content: contentBase64, branch, sha }) });
+    const resp = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent':'netlify-functions', 'Accept':'application/vnd.github.v3+json' }, body: JSON.stringify({ message: `update ${key}`, content: contentBase64, branch, sha }) });
     if (!resp.ok) { const t = await resp.text(); return { ok: false, error: t }; }
     return { ok: true };
   };
@@ -43,7 +43,8 @@ exports.handler = async (event) => {
       const safeName = filename.replace(/[^a-zA-Z0-9_.-]/g, '');
       const ext = extMap[mime] || (safeName.match(/\.[a-zA-Z0-9]+$/)?.[0] || '');
       const dir = isVideo ? 'assets/videos' : 'assets/images';
-      const key = `${dir}/${Date.now()}-${safeName}${ext ? '' : ''}`;
+      const nameWithExt = ext ? (safeName.endsWith(ext) ? safeName : `${safeName}${ext}`) : safeName;
+      const key = `${dir}/${Date.now()}-${nameWithExt}`;
       const r = await putFile(key, base64);
       if (!r.ok) return error(500, r.error || 'upload_failed');
       return json({ ok: true, path: `/${key}` });

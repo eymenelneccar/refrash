@@ -3,2039 +3,1096 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قائمة الطعام الإلكترونية - العربة لاند</title>
-    <!-- تضمين Tailwind CSS -->
+    <title>دايت ستي</title>
+    <!-- تحميل Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- تضمين خط Cairo من Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- تضمين أيقونات Lucide (بديل لـ Font Awesome) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- خط Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // إعداد ألوان Tailwind المخصصة
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'beige': '#F5F5DC', // لون الخلفية
+                        'coffee': '#331A12', // لون الأزرار والسلة
+                        'peach': '#FFCC80', // لون الآيتيمات
+                        'accent': '#E53935', // لون التكحيل (التمييز)
+                    },
+                    fontFamily: {
+                        'sans': ['Cairo', 'Inter', 'sans-serif'], // استخدام خط Cairo للعربية
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* ثوابت ألوان وهوية العلامة */
-        :root {
-            --brand-1: #f97316; /* orange-500 */
-            --brand-2: #ea580c; /* orange-600 */
-            --brand-text: #fff7ed; /* orange-50 */
-            --brand-radial: rgba(255,255,255,0.12);
+        /* لإخفاء شريط التمرير */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
         }
-        /* تحميل واعتماد خط MSjawhara من الملف المحلي */
-        @font-face {
-            font-family: 'MSjawhara';
-            src: url('MSjawhara-Bold.ttf') format('truetype');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
+        .scrollbar-hide {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
         }
-        /* تعريف الخط الرئيسي */
+        /* سحب سلس على iOS للأشرطة القابلة للتمرير */
+        .overflow-touch {
+            -webkit-overflow-scrolling: touch;
+        }
+        /* لضمان عمل الخط العربي بشكل صحيح */
         body {
-            font-family: 'MSjawhara', 'Cairo', sans-serif;
-            background-color: #f1f9f9; /* الخلفية الجديدة: رمادي كاشف/أبيض فاتح */
-            color: #18181b; /* لون النص الأساسي الداكن */
-            /* تمت إزالة الهيدر، لذلك لا حاجة لمسافة علوية ثابتة */
+            font-family: 'Cairo', 'Inter', 'sans-serif;
         }
-        /* تصميم شريط التنقل الجانبي/العلوي */
-        #nav-sidebar {
-            transition: transform 0.3s ease;
-            color: var(--brand-text);
-            background:
-                radial-gradient(800px circle at 70% 20%, var(--brand-radial), transparent 60%),
-                linear-gradient(135deg, var(--brand-1), var(--brand-2));
-            box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+            /* مؤثرات الحركة */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        /* لإخفاء شريط التنقل على الشاشات الصغيرة مبدئياً */
-        @media (max-width: 768px) {
-            #nav-sidebar {
-                transform: translateX(100%); /* إخفاء إلى اليمين */
-                right: 0;
-            }
-            .sidebar-open #nav-sidebar {
-                transform: translateX(0); /* إظهار */
-            }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-
-        /* تنسيق خاص لعربة التسوق (Sidebar) */
-        .cart-sidebar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 100%;
-            max-width: 400px;
-            height: 100%;
-            background-color: #ffffff;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 100; /* أعلى من النافبار */
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-            color: #18181b;
-        }
-
-        .cart-sidebar.open {
-            transform: translateX(0);
-        }
-
-        /* تراكب السلة أعلى كل شيء بما في ذلك النافبار */
-        #cart-overlay { z-index: 90; }
-
-        /* إخفاء النافبار عندما تكون السلة مفتوحة لواجهة أنظف */
-        .cart-open #main-navbar { display: none; }
-
-        /* تنسيق لزر الإضافة (+) في زاوية الصورة */
-        .add-button-overlay {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            background:
-                radial-gradient(80px circle at 50% 50%, var(--brand-radial), transparent 60%),
-                linear-gradient(135deg, var(--brand-1), var(--brand-2));
-            color: white;
-            cursor: pointer;
-            transition: background 0.2s, opacity 0.2s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border: 2px solid #ffffff;
-            z-index: 10;
-        }
-
-        .add-button-overlay:hover {
-            opacity: 0.92;
-        }
-
-        /* شاشة البدء (Splash Screen) */
-        #splash-screen {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #06343b;
-            direction: rtl;
-            background-color: #ffffff;
-            transition: opacity 0.35s ease;
-            will-change: opacity;
-        }
-        #splash-screen .content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 1rem 1.25rem;
-        }
-        #splash-screen .logo {
-            width: min(64vw, 260px);
-            display: block;
-            margin: 0 auto;
-            filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35));
-            animation: splashLogoPulse 1.2s ease-in-out infinite alternate;
-        }
-        #splash-screen .tagline {
-            margin-top: 0.75rem;
-            font-family: 'MSjawhara', 'Cairo', sans-serif;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            opacity: 0.9;
-        }
-        #splash-screen .bar {
-            margin: 1.25rem auto 0;
-            width: min(70vw, 320px);
-            height: 6px;
-            border-radius: 999px;
-            background-color: #e5e7eb;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        .animate-fade-in { animation: fade-in .4s ease-out both; }
+        .animate-slide-up { animation: slide-up .45s ease-out both; }
+        /* دعم لمس سريع للأزرار والعناصر التفاعلية */
+        .touch-manipulation { touch-action: manipulation; }
+        /* قص نص لسطريْن مع إخفاء الفائض */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        #splash-screen .bar .fill {
-            height: 100%;
-            width: 0%;
-            background-color: #c0c0c0;
-            border-radius: inherit;
-            animation: splashProgressGrow 2.4s ease-out forwards;
+        /* تقليل الحركة للمستخدمين الذين يفضلون ذلك */
+        @media (prefers-reduced-motion: reduce) {
+            .animate-fade-in, .animate-slide-up { animation: none !important; }
         }
-        @keyframes splashLogoPulse {
-            0% { transform: scale(0.96); opacity: 0.85; }
-            50% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.98); opacity: 0.95; }
-        }
-        @keyframes splashProgressGrow {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-
-        /* نمط زر + الدائري الموحد لداخل البطاقات وصفوف الأحجام */
-        .add-circle-btn {
-             display: inline-flex;
-             align-items: center;
-             justify-content: center;
-             width: 28px; /* أصغر ليطابق ارتفاع كبسولة السعر */
-             height: 28px;
-             border-radius: 50%;
-             background:
-                 radial-gradient(60px circle at 50% 50%, var(--brand-radial), transparent 60%),
-                 linear-gradient(135deg, var(--brand-1), var(--brand-2));
-             color: #ffffff;
-             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-             border: 2px solid #ffffff;
-             padding: 0;
-             line-height: 1;
-             box-sizing: border-box;
-             flex-shrink: 0;
-             transition: background 0.2s, opacity 0.2s;
-         }
-        .add-circle-btn:hover {
-            opacity: 0.92;
-        }
-
-        /* تعميم التدرّج والوهج الشعاعي على الأزرار الصلبة */
-        #fab-cart-btn,
-        #scroll-top-btn,
-        #whatsapp-btn,
-        #preview-add-btn,
-        .add-to-cart-btn {
-            background:
-                radial-gradient(280px circle at 50% 50%, var(--brand-radial), transparent 60%),
-                linear-gradient(135deg, var(--brand-1), var(--brand-2));
-            color: #ffffff;
-        }
-        #fab-cart-btn:hover,
-        #scroll-top-btn:hover,
-        #whatsapp-btn:hover,
-        #preview-add-btn:hover,
-        .add-to-cart-btn:hover {
-            filter: brightness(1.06);
-        }
-
-        /* أزرار الكمية داخل السلة (تجنب زر الحذف الأحمر) */
-        button[onclick^="updateQuantity"] {
-            background:
-                radial-gradient(180px circle at 50% 50%, var(--brand-radial), transparent 60%),
-                linear-gradient(135deg, var(--brand-1), var(--brand-2));
-            color: #ffffff;
-            border: 2px solid #ffffff;
-        }
-        button[onclick^="updateQuantity"]:hover { filter: brightness(1.06); }
-
-        /* كبسولات الأحجام/الشرائح ذات الخلفية الداكنة إلى تدرّج الهوية */
-        span[class*="bg-[#06343b]"] {
-            background:
-                radial-gradient(180px circle at 50% 50%, var(--brand-radial), transparent 60%),
-                linear-gradient(135deg, var(--brand-1), var(--brand-2));
-            color: #ffffff;
-        }
-
-        /* شريط الأقسام الأفقي تحت البحث */
-        .category-bar {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding: 0.5rem;
-            background-color: rgba(245, 245, 220, 0.6);
-            border: 1px solid #e5e7eb; /* gray-200 */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.08);
-        }
-        .category-bar::-webkit-scrollbar { height: 8px; }
-        .category-bar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 9999px; }
-
-        .nav-link { white-space: nowrap; }
-        /* إبراز العنصر النشط: حلقة داخلية وتكثيف التراكب بدلاً من تغيير الخلفية */
-        .nav-link.active {
-            box-shadow: inset 0 0 0 2px #ea580c, 0 8px 16px rgba(234, 88, 12, 0.18);
-            color: #ffffff !important;
-        }
-
-        /* تعديل الخلفيات والعناصر الداخلية لتناسب النمط الفاتح */
-        .header-bg {
-             background-color: #f1f9f9; 
-             border-bottom-color: #e0e0e0;
-        }
-        .cart-item-bg {
-             background-color: #f9f9f9; 
-             border-color: #e0e0e0;
-        }
-        .text-main {
-             color: #18181b; 
-        }
-
-        /* زر السلة والسهم العائمين على الهاتف */
-         @media (max-width: 640px) {
-            #fab-cart-btn {
-                position: fixed;
-                bottom: 80px; /* فوق الفوتر */
-                right: 16px;
-                z-index: 60;
-            }
-            #scroll-top-btn {
-                bottom: 80px; /* موازة السلة */
-                left: 16px;
-                z-index: 60; /* فوق الفوتر */
-            }
-        }
-        .text-green-600 { color: #ea580c !important; }
-        .hover\:text-green-700:hover { color: #c2410c !important; }
-        .bg-green-600 { background-color: #ea580c !important; }
-        .hover\:bg-green-700:hover { background-color: #c2410c !important; }
-        .border-green-600 { border-color: #ea580c !important; }
-        .fill-green-600 { fill: #ea580c !important; }
-
-        /* حالات النافبار: عائم فوق الهيرو ثم يثبت أعلى الصفحة عند التمرير */
-        #main-navbar {
-            transition: background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
-        }
-        #main-navbar.navbar-floating {
-            position: absolute; top: 0; left: 0; right: 0;
-            color: #ffffff;
-            background: rgba(255,255,255, .10);
-            border-bottom: 1px solid rgba(255,255,255, .20);
-            -webkit-backdrop-filter: saturate(180%) blur(8px);
-            backdrop-filter: saturate(180%) blur(8px);
-        }
-         #main-navbar.navbar-stuck {
-             position: fixed; top: 0; left: 0; right: 0;
-             background: rgba(255,255,255, .94);
-             color: #ea580c !important;
-             border-bottom: 1px solid #e5e7eb;
-             box-shadow: 0 8px 20px rgba(234, 88, 12, .08);
-             z-index: 100;
-         }
-
-         /* بطاقات الفئات: صورة مع تراكب وتعزيز قابلية القراءة */
-        .category-card {
-            position: relative;
-            border-radius: 0.75rem; /* rounded-xl */
-            overflow: hidden;
-            transition: transform .25s ease, box-shadow .25s ease, opacity .4s ease;
-            opacity: 0; /* ستظهر عبر المراقِب */
-            transform: translateY(6px);
-            display: block;
-            min-height: 6.5rem; /* ضمان الارتفاع حتى بدون صورة */
-            background-color: #ffffff; /* خلفية افتراضية عند غياب الصورة */
-        }
-        @media (min-width: 640px) { .category-card { min-height: 7.5rem; } }
-        @media (min-width: 768px) { .category-card { min-height: 9rem; } }
-         .category-card.reveal { opacity: 1; transform: translateY(0); }
-         .category-card img { display: block; width: 100%; height: 6.5rem; object-fit: cover; }
-         @media (min-width: 640px) { .category-card img { height: 7.5rem; } }
-         @media (min-width: 768px) { .category-card img { height: 9rem; } }
-         .category-card .cat-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(234, 88, 12, .55), rgba(234, 88, 12, .32), rgba(234, 88, 12, 0));
-            transition: background .25s ease, opacity .25s ease;
-         }
-         .nav-link.active .cat-overlay {
-            background: linear-gradient(to top, rgba(234, 88, 12, .62), rgba(234, 88, 12, .38), rgba(234, 88, 12, 0));
-         }
-         .category-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(234, 88, 12, .12); }
-        .category-card:hover .cat-overlay {
-            background: linear-gradient(to top, rgba(234, 88, 12, .44), rgba(234, 88, 12, .22), rgba(234, 88, 12, 0));
-        }
-         .category-card .cat-title {
-             position: absolute; left: 0; right: 0; bottom: 0.5rem;
-             color: #ffffff; font-weight: 800; text-align: center;
-             text-shadow: 0 1px 2px rgba(0,0,0,.35);
-             padding: 0 0.5rem; font-size: .95rem;
-         }
-         @media (min-width: 640px) { .category-card .cat-title { font-size: 1rem; } }
-         @media (min-width: 768px) { .category-card .cat-title { font-size: 1.05rem; } }
-
-         /* شريط البحث: يفتح تحت النافبار وبنفس ارتفاعه */
-         #search-bar-panel { transition: height .2s ease; }
-         #search-bar-panel.search-open { display: flex; align-items: center; }
-
- 
-      </style>
-      <script>
-        // ربط Google Sheet عبر Apps Script (مقدَّم من المستخدم)
-        window.GS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxXY1tRMfsz-N5WCoiXSLgrR3GSYr12LORCMenxF5kxQihnTK7w8rC7F2bLYbqwQ_e4XA/exec';
-        // ضبط رقم واتساب الذي يستقبل الطلبات
-        window.BRANCH_CONFIG = window.BRANCH_CONFIG || {};
-        window.BRANCH_CONFIG.whatsapp = '9647734587101';
-        try { localStorage.setItem('restaurant_whatsapp_number', '9647734587101'); } catch (e) {}
-      </script>
+</style>
 </head>
-<body>
-  <!-- شاشة البدء / سبلاش -->
-  <div id="splash-screen" role="dialog" aria-label="شاشة البدء">
-    <div class="content">
-      <img src="logo.png" alt="شعار العربة لاند" class="logo" />
-      <div class="bar" aria-hidden="true"><div class="fill"></div></div>
-    </div>
-  </div>
+<body class="bg-white font-sans">
 
-    <!-- الهيدر بهيرو مع نافبار شفاف فوقه -->
-    <header class="relative">
-        <div class="relative h-64 sm:h-80 lg:h-96 overflow-hidden rounded-b-2xl">
-            <video id="hero-video" class="absolute inset-0 w-full h-full object-cover" style="display:none" muted loop playsinline autoplay></video>
-            <img id="hero-image" src="assets/images/Al_Kalha_Restaurant-_-karar.jpg" alt="صورة الغلاف" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">
-            <div id="hero-overlay" class="absolute inset-0 bg-black/35"></div>
-            <img id="brand-logo" src="" alt="لوغو" class="absolute" style="display:none; z-index:60; top:56%; left:50%; width:128px; height:128px; transform:translate(-50%, -50%); border-radius:9999px; border:3px solid #fff; box-shadow:0 8px 24px rgba(0,0,0,.3); object-fit:cover" onerror="this.style.display='none'" />
-            <nav id="main-navbar" class="navbar-floating z-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2 flex items-center justify-between relative">
-                    <div class="flex items-center gap-3">
-                        <span id="branch-name" class="text-lg sm:text-xl font-extrabold">العربة لاند</span>
-                        <a href="https://www.google.com/maps?q=33.36888885498047,43.78224563598633&z=17&hl=en" target="_blank" rel="noopener" class="inline-flex items-center p-1 rounded-lg hover:bg-white/15" title="الموقع">
-                            <i data-lucide="map-pin" class="w-4 h-4"></i>
-                        </a>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button id="toggle-search-btn" class="p-2 rounded-lg hover:bg-white/15" title="بحث">
-                            <i data-lucide="search" class="w-5 h-5"></i>
-                        </button>
-                        <a href="tel:" class="p-2 rounded-lg hover:bg-white/15" title="اتصال">
-                            <i data-lucide="phone" class="w-5 h-5"></i>
-                        </a>
-                        <!-- زر السلة في النافبار بدل الزر العائم -->
-                        <button id="navbar-cart-btn" type="button" aria-label="افتح السلة" class="p-2 rounded-lg hover:bg-white/15 relative" onclick="toggleCart(true)">
-                            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                            <span id="navbar-cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">0</span>
-                        </button>
-                    </div>
-                    <!-- شريط البحث داخل النافبار -->
-                    <div id="navbar-search-overlay" class="hidden absolute inset-0 z-10 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-                        <div class="relative w-full max-w-xl mx-auto">
-                            <input type="text" id="search-input-navbar" oninput="filterItems()" placeholder="ابحث عن طبق..." class="w-full py-2 px-6 pl-12 rounded-xl bg-white/90 text-main placeholder-gray-600 border border-[#ea580c]/30 focus:ring-[#ea580c] focus:border-[#ea580c] transition" />
-                            <i data-lucide="search" class="w-5 h-5 text-gray-600 absolute top-1/2 left-4 transform -translate-y-1/2"></i>
-                        </div>
-                        <button id="navbar-search-close" aria-label="أغلق البحث" class="absolute right-6 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/80 hover:bg-white text-main shadow ring-1 ring-[#ea580c]/20">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
-                    </div>
+    <!-- الحاوية: عرض كامل على الجوال، أوسع على الحواسيب -->
+    <div class="mx-auto min-h-screen bg-white relative pb-24 max-w-full lg:max-w-5xl xl:max-w-6xl shadow-lg lg:shadow-none">
+
+        <!-- الهيدر: العنوان + زر السلة -->
+        <!-- header padding: from px-3 to px-2 -->
+        <header class="flex justify-between items-center px-2 py-4 sticky top-0 bg-white/80 backdrop-blur-sm z-10 border-b border-coffee/10">
+            <div class="flex flex-col items-start leading-tight">
+                <!-- مركّب العنوان عند ظهور عنوان فرعي: اسم القسم (غامق) | العنوان الفرعي (صغير) -->
+                <div id="sticky-composite" class="hidden flex items-baseline">
+                    <span id="sticky-section" class="text-2xl font-bold text-coffee"></span>
+                    <span class="mx-1 text-coffee/30">|</span>
+                    <span id="sticky-subheading" class="text-sm font-normal text-coffee/70"></span>
                 </div>
-            </nav>
-            <div class="absolute bottom-4 right-4 left-4 text-white">
-                <h1 class="text-2xl sm:text-3xl font-black drop-shadow-lg" id="hero-title">مرحبًا بكم</h1>
+                <!-- العنوان الافتراضي -->
+                <h1 id="site-title" data-default="دايت ستي" class="text-2xl font-bold text-coffee">دايت ستي</h1>
+                <!-- اسم القسم الصغير أسفل العنوان عندما لا يظهر المركّب -->
+                <span id="site-section-name" class="text-xs font-normal text-coffee/60 mt-0.5 hidden"></span>
             </div>
-        </div>
-    </header>
-
-    
-    <!-- محتوى القائمة الرئيسية -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-0">
-        <!-- شريط البحث المنسدل -->
-        <div id="search-bar-panel" class="mb-6 hidden">
-            <div class="relative">
-                <input type="text" id="search-input-mobile" oninput="filterItems()" placeholder="ابحث عن طبق..." class="w-full py-3 px-6 pr-12 rounded-xl bg-white text-main placeholder-gray-500 border border-gray-300 focus:ring-[#ea580c] focus:border-[#ea580c] transition">
-                <i data-lucide="search" class="w-5 h-5 text-gray-500 absolute top-1/2 left-4 transform -translate-y-1/2"></i>
-            </div>
-        </div>
-
-        <!-- شريط الأقسام تحت البحث (أفقي وأنيق) -->
-        <div class="mb-6">
-            <div class="category-bar">
-                <ul id="section-nav-list" class="flex items-start gap-2 text-gray-700 text-sm font-bold">
-                    <!-- يتم توليد الروابط بواسطة JS -->
-                </ul>
-            </div>
-        </div>
-
-        <!-- أزرار تبديل نمط العرض -->
-        <div class="flex items-center gap-2 mb-4" id="view-toggle">
-            <button id="btn-grid-view" class="p-2 rounded-lg border border-gray-300 text-main" title="شبكة">
-                <i data-lucide="grid" class="w-5 h-5"></i>
-            </button>
-            <button id="btn-list-view" class="p-2 rounded-lg border border-gray-300 text-main" title="قائمة">
-                <i data-lucide="list" class="w-5 h-5"></i>
-            </button>
-        </div>
-
-        <div id="menu-content" class="md:pl-4 md:pt-6">
-            <!-- الأقسام والوجبات سيتم توليدها هنا بواسطة JS -->
-        </div>
-
-        <div id="no-results" class="text-center text-gray-500 py-12 hidden">
-            <i data-lucide="alert-octagon" class="w-12 h-12 mx-auto mb-4 text-[#ea580c]"></i>
-            <p class="text-2xl font-bold">عفواً، لا توجد نتائج مطابقة.</p>
-            <p class="text-lg">يرجى المحاولة بكلمات بحث مختلفة.</p>
-        </div>
-
-    </main>
-
-    <!-- تم إزالة الفوتر الثابت والزر العائم للسلة بناءً على الطلب -->
-
-    <!-- نافذة عربة التسوق الجانبية (Cart Popup) -->
-    <div id="cart-sidebar" class="cart-sidebar">
-        <div class="p-6 h-full flex flex-col">
-            <div class="flex justify-between items-center border-b border-gray-300 pb-4 mb-4">
-                <h2 class="text-3xl font-extrabold text-main">اطلع على سلتك</h2>
-                <button id="close-cart-btn" class="p-2 rounded-full hover:bg-gray-100 transition">
-                    <i data-lucide="x" class="w-6 h-6 text-main"></i>
+            <div class="flex items-center gap-2">
+                <button id="open-cart-btn" class="relative">
+                    <img src="shopping-bag.png" alt="أيقونة السلة" class="w-8 h-8 object-contain" loading="eager" />
+                    <span id="cart-count-bubble" class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5 hidden">0</span>
                 </button>
+                <a href="review.html" class="px-3 py-2 rounded-lg border border-accent text-accent font-bold hover:bg-accent/10 transition-colors">قيمنا</a>
             </div>
-            <div id="order-branch-line" class="text-sm text-gray-600 mb-3">
-                الطلب من <span id="order-branch-label"></span>
-            </div>
+        </header>
 
-            <!-- جسم السلة قابل للتمرير بالكامل -->
-            <div id="cart-body" class="flex-1 overflow-y-auto space-y-4 pr-1">
-                <div id="cart-items-list" class="space-y-4">
-                    <!-- عناصر السلة تظهر هنا -->
-                </div>
-
-                <!-- رسالة السلة الفارغة -->
-                <div id="empty-cart-message" class="text-center text-gray-500 py-12 hidden">
-                    <i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-4 text-[#ea580c]"></i>
-                    <p class="text-lg font-semibold">عربتك فارغة حالياً.</p>
-                    <p class="text-sm">أضف بعض الأطباق الشهية!</p>
-                </div>
-
-                <!-- ملاحظة الزبون -->
-                <div id="customer-note-section" class="">
-                    <label for="customer-note" class="block text-sm font-bold text-main mb-2">ملاحظة الزبون</label>
-                    <textarea id="customer-note" rows="3" placeholder="اكتب أي ملاحظة للطلب هنا..."
-                        class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50 focus:ring-[#ea580c] focus:border-[#ea580c] text-main placeholder-gray-400"></textarea>
-                </div>
-
-                <!-- معلومات الزبون -->
-                <div id="customer-info-section" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="col-span-1">
-                        <label for="customer-name" class="block text-sm font-bold text-main mb-1">الاسم</label>
-                        <input id="customer-name" type="text" placeholder="اكتب اسمك"
-                               class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50 focus:ring-[#ea580c] focus:border-[#ea580c] text-main placeholder-gray-400" />
-                    </div>
-                    <div class="col-span-1">
-                        <label for="customer-phone" class="block text-sm font-bold text-main mb-1">الرقم</label>
-                        <input id="customer-phone" type="tel" inputmode="tel" placeholder="اكتب رقم هاتفك"
-                               class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50 focus:ring-[#ea580c] focus:border-[#ea580c] text-main placeholder-gray-400" />
-                    </div>
-
-                    <!-- تم حذف حقول نوع الطلب ونوع عملية الشراء من السلة -->
-
-                <!-- العنوان يظهر تحت نوع الطلب عند اختيار إرسال إلى العنوان -->
-                <div class="col-span-1 sm:col-span-2" id="delivery-address-wrapper">
-                    <label for="delivery-address" class="block text-sm font-bold text-main mb-1">العنوان</label>
-                    <input id="delivery-address" type="text" placeholder="اكتب عنوانك بالتفصيل"
-                           class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50 focus:ring-[#06343b] focus:border-[#06343b] text-main placeholder-gray-400" />
-                    <p class="text-xs text-gray-500 mt-1">مثال: الشارع، البيت/العمارة، أقرب نقطة دالة</p>
-                </div>
-
-                <div class="col-span-1 sm:col-span-2" id="customer-area-wrapper">
-                    <label for="customer-area" class="block text-sm font-bold text-main mb-1">المحافظة</label>
-                    <select id="customer-area" class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50 focus:ring-[#ea580c] focus:border-[#ea580c] text-main">
-                        <option value="">اختر المحافظة</option>
-                    </select>
-                    <div id="governorate-fee" class="text-xs text-gray-500 mt-1">أجور الشحن: —</div>
+        <!-- قسم الهيرو (جديد) -->
+        <!-- hero section padding: from px-3 to px-2 -->
+        <section id="hero-section" class="px-2 py-4">
+<div class="relative rounded-xl overflow-hidden shadow-lg h-64 sm:h-72 lg:h-80 bg-coffee animate-fade-in">
+                <!-- يمكنك تغيير الصورة من هنا -->
+                <img id="hero-image" src="https://placehold.co/600x400/331A12/FFCC80?text=أطباقنا+المميزة" alt="صورة ترحيبية" class="w-full h-full object-cover opacity-80">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6">
+                    <h2 id="hero-title" class="text-3xl font-bold text-white leading-tight">
+                        <span id="hero-title-text">أهلاً بك في</span><br><span id="hero-subtitle">دايت ستي</span>
+                    </h2>
                 </div>
             </div>
+        </section>
 
-                <div id="cart-summary" class="border-t border-gray-300 pt-4">
+        <!-- شريط الأقسام (قابل للتمرير) -->
+        <nav class="px-3 py-4"> <!-- تم تعديل الحشو -->
+            <h3 class="text-coffee font-bold mb-2">الأقسام</h3>
+            <!-- categories nav inner padding: from px-3 to px-2 -->
+            <div id="categories-nav" class="flex items-center gap-4 overflow-x-auto overflow-touch scrollbar-hide snap-x snap-mandatory px-2 py-1" style="scroll-padding: 1rem;"> <!-- سكرول أفقي للفئات مع padding للأطراف -->
+                <!-- سيتم ملء الأزرار هنا بواسطة الجافاسكربت -->
+            </div>
+        </nav>
 
-                    <div class="flex justify-between items-center text-xl font-bold mb-4">
-                        <span>الإجمالي:</span>
-                        <span id="cart-total" class="text-[#ea580c]">0 د.ع</span>
-                    </div>
-                    <button id="whatsapp-btn" class="w-full py-3 bg-[#ea580c] hover:bg-[#ea580c] text-white font-bold text-lg rounded-xl transition shadow-lg" onclick="sendOrderViaWhatsApp()">
-                        إرسال الطلب <i data-lucide="message-circle" class="inline w-5 h-5 ml-2"></i>
+        <!-- عنوان القسم الحالي -->
+        <div id="current-category-title" class="px-2 text-coffee font-bold text-lg mb-2"></div>
+
+        <!-- قسم عرض المنتجات -->
+        <main id="items-container" role="list" aria-label="قائمة الأصناف" class="px-2 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 lg:gap-8"> <!-- شبكة متجاوبة: 1/2/3/4 أعمدة ، زيادة الهوامش بين البطاقات -->
+            <!-- سيتم ملء المنتجات هنا -->
+        </main>
+
+        <!-- شريط التنقل السفلي -->
+        <footer class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-10 border-t border-coffee/10">
+            <div id="bottom-nav" class="flex justify-around items-center p-2">
+                <!-- سيتم ملء الأيقونات هنا -->
+            </div>
+            <div class="border-t border-coffee/10 text-center text-[11px] text-coffee/60 px-2 py-1">
+              تم صنعها بواسطة |
+              <a href="https://iqrarabic.com/" target="_blank" rel="noopener" class="font-semibold text-red-600/70 hover:text-red-700/80 hover:underline">İQR MENU</a>
+            </div>
+            <!-- قائمة المزيد المنبثقة -->
+            <div id="more-menu" class="hidden fixed bottom-16 left-0 right-0 max-w-lg mx-auto px-3 z-20">
+                <div class="bg-white border border-coffee/20 rounded-xl shadow-lg p-3 flex items-center justify-around gap-6">
+                    <a id="instagram-btn" href="#" target="_blank" rel="noopener" class="flex flex-col items-center text-xs text-coffee/80 hover:text-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm5 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm6.5-.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>
+                        <span>Instagram</span>
+                    </a>
+                    <a id="facebook-btn" href="#" target="_blank" rel="noopener" class="flex flex-col items-center text-xs text-coffee/80 hover:text-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1"><path d="M13.5 9H16V6h-2.5a3.5 3.5 0 0 0-3.5 3.5V12H8v3h2v6h3v-6h2.2l.8-3H13.5V9Z"/></svg>
+                        <span>Facebook</span>
+                    </a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- نافذة السلة (مخفية افتراضيًا) -->
+        <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" aria-hidden="true">
+            <!-- حاوية السلة الجانبية -->
+            <div id="cart-drawer" class="fixed top-0 right-0 w-full max-w-md h-full bg-white z-50 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out">
+                
+                <!-- هيدر السلة -->
+                <div id="cart-header" class="flex justify-between items-center p-4 border-b border-coffee/20">
+                    <h2 class="text-xl font-bold text-coffee">سلة طلباتك</h2>
+                    <button id="close-cart-btn">
+                        <!-- أيقونة إغلاق -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-coffee">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
                     </button>
-                    <div class="text-center my-2 text-sm text-gray-500">or</div>
-                    <button id="call-btn" class="w-full py-3 bg-gray-400 hover:bg-gray-500 text-white font-bold text-lg rounded-xl transition" onclick="orderViaCall()">
-                        اطلب عبر اتصال <i data-lucide="phone" class="inline w-5 h-5 ml-2"></i>
+                </div>
+
+                <!-- محتويات السلة -->
+                <div id="cart-items" class="p-4 space-y-4 overflow-y-auto">
+                    <!-- سيتم ملء عناصر السلة هنا -->
+                    <!-- <p class="text-center text-coffee/70">سلتك فارغة.</p> -->
+                </div>
+
+                <!-- فوتر السلة (الإجمالي والطلب) -->
+                <div id="cart-footer" class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-coffee/20">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-semibold text-coffee">الإجمالي:</span>
+                        <span id="cart-total" class="text-2xl font-bold text-accent">0 د.ع</span>
+                    </div>
+                    <button id="submit-order-btn" class="w-full bg-accent text-white py-3 rounded-lg font-bold text-lg hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M2.25 12c0-4.28 3.47-7.75 7.75-7.75s7.75 3.47 7.75 7.75-3.47 7.75-7.75 7.75S2.25 16.28 2.25 12Zm9.25-3.25a.75.75 0 0 0-1.5 0v3.25c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5V8.75Z"/></svg>
+                        إرسال الطلب
                     </button>
+                    <div class="text-center text-coffee/60 text-sm my-2">or</div>
+                    <a id="call-order-btn" href="#" class="block w-full text-center border border-accent text-accent py-2 rounded-lg font-bold hover:bg-accent/10 transition-colors inline-flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M2.25 6.75A3 3 0 0 1 5.25 3.75h1.5a2.25 2.25 0 0 1 2.25 2.25v2.25a2.25 2.25 0 0 1-2.25 2.25h-.375a11.25 11.25 0 0 0 6.75 6.75V16.5a2.25 2.25 0 0 1 2.25-2.25h2.25a2.25 2.25 0 0 1 2.25 2.25v1.5a3 3 0 0 1-3 3h-.75c-8.284 0-15-6.716-15-15v-.75Z"/></svg>
+                        اطلب عبر اتصال
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- نافذة معاينة المنتج -->
+        <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" aria-hidden="true">
+            <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="relative w-full pt-[100%]">
+                    <img id="item-preview-image" src="" alt="" class="absolute inset-0 w-full h-full object-cover">
+                    <button id="close-item-btn" class="absolute top-2 left-2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-4 space-y-2">
+                    <h3 id="item-preview-name" class="text-xl font-bold text-coffee"></h3>
+                    <p id="item-preview-description" class="text-sm text-coffee/80"></p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span id="item-preview-price" class="text-lg font-bold text-coffee"></span>
+                        <button id="item-preview-add" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">أضف للسلة</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- overlay لعربة التسوق -->
-    <div id="cart-overlay" class="fixed inset-0 bg-black opacity-50 z-40 hidden" onclick="toggleCart(false)"></div>
 
-    <!-- تم حذف زر العودة للأعلى -->
-
-    <!-- زر السلة أصبح ضمن الفوتر الثابت -->
-
-    <!-- مودال معاينة المنتج -->
-    <div id="item-preview-overlay" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
-    <div id="item-preview-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="relative">
-                <img id="preview-img" src="" alt="" class="w-full h-56 object-cover cursor-pointer" onerror="this.style.display='none'">
-                <button id="preview-close-btn" class="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white shadow">
-                    <i data-lucide="x" class="w-5 h-5 text-main"></i>
-                </button>
-            </div>
-            <div class="p-4">
-                <h3 id="preview-name" class="text-xl font-extrabold text-main mb-2"></h3>
-                <p id="preview-desc" class="text-sm text-gray-600 mb-3"></p>
-                <div id="preview-variants" class="flex flex-col gap-2 mb-3"></div>
-                <div class="flex items-center justify-between">
-                <span id="preview-price" class="text-lg font-black text-[#ea580c]"></span>
-                <button id="preview-add-btn" class="px-4 py-2 bg-[#ea580c] hover:bg-[#ea580c] text-white rounded-xl font-bold shadow">
-                        أضف إلى السلة
-                    </button>
+        <!-- مودال التنبيه المخصص -->
+        <div id="app-alert" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+            <div id="app-alert-backdrop" class="absolute inset-0 bg-black/40"></div>
+            <div class="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-2xl p-5 text-center animate-fade-in max-h-[80vh] overflow-y-auto">
+                <div id="app-alert-icon" class="mx-auto mb-3 text-accent">
+                    <!-- افتراضي: تحذير -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 6v6a1 1 0 1 1-2 0V8a1 1 0 1 1 2 0Zm-1 10a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
                 </div>
+                <div id="app-alert-message" class="text-coffee text-base leading-7"></div>
+                <button id="app-alert-ok" class="mt-4 w-full bg-accent text-white py-2.5 rounded-lg font-bold hover:bg-red-700 transition-colors">حسناً</button>
             </div>
         </div>
-    </div>
 
-    <!-- مودال معاينة الصورة (ليبت بوكس) -->
-    <div id="image-lightbox-overlay" class="fixed inset-0 bg-black/70 z-50 hidden" style="z-index: 1000;"></div>
-    <div id="image-lightbox-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="z-index: 1001;">
-      <div class="relative">
-        <img id="lightbox-img" src="" alt="" class="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl" onerror="this.style.display='none'">
-        <button id="image-lightbox-close" class="absolute -top-3 -right-3 p-2 rounded-full bg-white/90 hover:bg-white shadow">
-          <i data-lucide="x" class="w-5 h-5 text-main"></i>
-        </button>
-      </div>
     </div>
 
     <script>
-        // دالة للمرور السلس إلى القسم
-        const scrollToSection = (id) => {
-            const element = document.getElementById(id);
-            const headerElement = document.querySelector('header');
-            const headerHeight = headerElement ? headerElement.offsetHeight : 0; // لا تعويض إذا لا يوجد هيدر
+        document.addEventListener('DOMContentLoaded', () => {
 
-            if (element) {
-                // 1. في حال كان هناك شريط جانبي سابقاً، أغلقه بأمان إن وجد
-                document.body.classList.remove('sidebar-open');
-                const overlayEl = document.getElementById('sidebar-overlay');
-                if (overlayEl) overlayEl.classList.add('hidden');
-                
-                // 2. حساب وتطبيق التمرير مع تعويض الهيدر الثابت
-                const yPosition = element.getBoundingClientRect().top + window.pageYOffset;
-                
-                window.scrollTo({
-                    // تعويض ارتفاع الهيدر (وهو 5rem أو ~80px) بالإضافة إلى مسافة صغيرة (5px)
-                    top: yPosition - headerHeight - 5, 
-                    behavior: 'smooth'
-                });
-                
-                // 3. تفعيل رابط التنقل فوراً عند النقر
-                const navLinks = document.querySelectorAll('.nav-link');
-                navLinks.forEach(link => link.classList.remove('active'));
-                const activeLink = document.querySelector(`.nav-link[data-section-id="${id}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                }
-            }
-        };
+            // --- بيانات المنيو الوهمية ---
+            let menuData = {
+                "مقبلات": [
+                    { id: 1, name: "بروشيتا الطماطم", description: "خبز محمص مع طماطم طازجة، ريحان، وثوم.", price: 25, image: "https://placehold.co/100x100/331A12/FFCC80?text=مقبلات" },
+                    { id: 2, name: "حلقات البصل المقرمشة", description: "تقدم مع صلصة الباربيكيو الكريمية.", price: 30, image: "https://placehold.co/100x100/331A12/FFCC80?text=مقبلات" },
+                    { id: 3, name: "أجنحة دجاج بافلو", description: "أجنحة دجاج حارة تقدم مع صلصة الرانش.", price: 40, image: "https://placehold.co/100x100/331A12/FFCC80?text=مقبلات" },
+                ],
+                "رئيسية": [
+                    { id: 4, name: "ستيك ريب آي", description: "قطعة ستيك 300 جرام مشوية حسب الطلب.", price: 120, image: "https://placehold.co/100x100/331A12/FFCC80?text=رئيسي" },
+                    { id: 5, name: "سلمون مشوي", description: "فيليه سلمون طازج مع الهليون والليمون.", price: 95, image: "https://placehold.co/100x100/331A12/FFCC80?text=رئيسي" },
+                    { id: 6, name: "باستا ألفريدو بالدجاج", description: "باستا فيتوتشيني بصلصة ألفريدو الكريمية.", price: 70, image: "https://placehold.co/100x100/331A12/FFCC80?text=رئيسي" },
+                ],
+                "حلويات": [
+                    { id: 7, name: "تشيز كيك فراولة", description: "طبقة غنية من التشيز كيك مع صوص الفراولة.", price: 35, image: "https://placehold.co/100x100/331A12/FFCC80?text=حلى" },
+                    { id: 8, name: "براوني الشوكولاتة", description: "براوني دافئ يقدم مع آيس كريم فانيلا.", price: 40, image: "https://placehold.co/100x100/331A12/FFCC80?text=حلى" },
+                ],
+                "مشروبات": [
+                    { id: 9, name: "عصير برتقال طازج", description: "عصير برتقال طبيعي 100%.", price: 20, image: "https://placehold.co/100x100/331A12/FFCC80?text=مشروب" },
+                    { id: 10, name: "موهيتو ليمون ونعناع", description: "مشروب منعش بالليمون والنعناع.", price: 25, image: "https://placehold.co/100x100/331A12/FFCC80?text=مشروب" },
+                ]
+            };
+            
+            // أيقونات شريط التنقل السفلي
+            const navIcons = {
+                "مقبلات": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.25 12l2.846.813a4.5 4.5 0 0 1 3.09 3.09L25.75 18l-.813 2.846a4.5 4.5 0 0 1-3.09 3.09L18.25 24l-2.846-.813a4.5 4.5 0 0 1-3.09-3.09L11.75 18l.813-2.846a4.5 4.5 0 0 1 3.09-3.09L18.25 12Z" /></svg>`,
+                "رئيسية": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>`,
+                "حلويات": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A3.375 3.375 0 0 0 12 1.5v3.375Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 11.25h16.5a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5v-3.75a1.5 1.5 0 0 1 1.5-1.5Z" /></svg>`,
+                "مشروبات": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1"><path stroke-linecap="round" stroke-linejoin="round" d="M.75 3.75h16.5a1.5 1.5 0 0 1 1.5 1.5v11.25a1.5 1.5 0 0 1-1.5 1.5H.75a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5Zm13.5 0V.75" /></svg>`
+            };
 
-        // ------------------ بيانات القائمة (من الأصول/التخزين) ------------------
-        const STORAGE_KEY_MENU = 'menu_assets';
-        const CATS_IMAGES_KEY = 'menu_category_images';
-        let categoryImagesMap = {};
-        let menuData = [];
-        let viewMode = localStorage.getItem('view_mode') || 'grid';
+            // صور للفئات
+            let categoryImages = {
+                "مقبلات": "https://placehold.co/300x300/FFCC80/331A12?text=مقبلات",
+                "رئيسية": "https://placehold.co/300x300/0EA5E9/ffffff?text=رئيسية",
+                "حلويات": "https://placehold.co/300x300/EF4444/ffffff?text=حلويات",
+                "مشروبات": "https://placehold.co/300x300/10B981/ffffff?text=مشروبات"
+            };
 
-        async function loadMenuItemsFromAssetsOrStorage() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY_MENU);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
-                }
-            } catch {}
-            try {
-                const resp = await fetch('assets/menu.json', { cache: 'no-store' });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (Array.isArray(data)) return data;
-                }
-            } catch (e) {
-                console.warn('تعذّر تحميل الأصول', e);
-            }
-            return [];
-        }
+            // --- عناصر الواجهة ---
+            const itemsContainer = document.getElementById('items-container');
+            const categoriesNav = document.getElementById('categories-nav');
+            const bottomNav = document.getElementById('bottom-nav');
+            const cartModal = document.getElementById('cart-modal');
+            const cartDrawer = document.getElementById('cart-drawer');
+            const openCartBtn = document.getElementById('open-cart-btn');
+            const closeCartBtn = document.getElementById('close-cart-btn');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalEl = document.getElementById('cart-total');
+            const cartCountBubble = document.getElementById('cart-count-bubble');
+            const submitOrderBtn = document.getElementById('submit-order-btn');
+            const callOrderBtn = document.getElementById('call-order-btn');
+            const currentCategoryTitle = document.getElementById('current-category-title');
+            const moreMenu = document.getElementById('more-menu');
+            // عناصر معاينة المنتج
+            const itemModal = document.getElementById('item-modal');
+            const closeItemBtn = document.getElementById('close-item-btn');
+            const itemPreviewImage = document.getElementById('item-preview-image');
+            const itemPreviewName = document.getElementById('item-preview-name');
+            const itemPreviewDescription = document.getElementById('item-preview-description');
+            const itemPreviewPrice = document.getElementById('item-preview-price');
+            const itemPreviewAdd = document.getElementById('item-preview-add');
 
-        function buildSections(items) {
-            const groups = {};
-            items.forEach(it => {
-                const cat = (it.category || 'أخرى').trim();
-                if (!groups[cat]) groups[cat] = [];
-                const type = (it.type || 'item');
-                if (type === 'heading') {
-                    groups[cat].push({
-                        id: it.id,
-                        type: 'heading',
-                        name: it.name || '',
-                        desc: '',
-                        price: 0,
-                        img: ''
-                    });
+            // مودال التنبيه المخصص (متاح عبر التطبيق كاملًا)
+            const appAlert = document.getElementById('app-alert');
+            const appAlertMsg = document.getElementById('app-alert-message');
+            const appAlertIcon = document.getElementById('app-alert-icon');
+            const appAlertOk = document.getElementById('app-alert-ok');
+            const appAlertBackdrop = document.getElementById('app-alert-backdrop');
+
+            function showAppAlert(message, type = 'warning') {
+                if (!appAlert) return alert(message);
+                appAlertMsg.textContent = message || '';
+                // ضبط الأيقونة حسب النوع
+                let svg = '';
+                if (type === 'success') {
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm4.7 7.3a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4l1.3 1.3 4.3-4.3a1 1 0 0 1 1.4 0Z"/></svg>';
+                    appAlertIcon.className = 'mx-auto mb-3 text-coffee';
+                } else if (type === 'info') {
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-1 3a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Z"/></svg>';
+                    appAlertIcon.className = 'mx-auto mb-3 text-coffee';
                 } else {
-                    const variants = Array.isArray(it.variants) ? it.variants.map(v => ({
-                        key: String(v.key || '').trim() || String(v.label || '').trim(),
-                        label: String(v.label || '').trim() || String(v.key || '').trim(),
-                        price: Number(v.price) || 0,
-                        variantType: String(v.variantType || '').trim()
-                    })).filter(v => v.price > 0) : [];
-                    const basePrice = variants.length ? Math.min(...variants.map(v => v.price)) : (Number(it.price) || 0);
-                    groups[cat].push({
-                        id: it.id,
-                        type: 'item',
-                        name: it.name,
-                        desc: it.description || '',
-                        price: basePrice,
-                        img: (it.imageUrl || '').trim(),
-                        variants
-                    });
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 6v6a1 1 0 1 1-2 0V8a1 1 0 1 1 2 0Zm-1 10a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>';
+                    appAlertIcon.className = 'mx-auto mb-3 text-accent';
                 }
-            });
-            return Object.keys(groups).map(cat => ({
-                id: cat.toLowerCase().replace(/\s+/g, '-'),
-                title: cat,
-                items: groups[cat]
-            }));
-        }
-
-        // ------------------ إدارة حالة السلة (localStorage) ------------------
-        let cart = [];
-        // المحافظات وأجور الشحن
-        let governorates = [];
-        let governoratesMap = {};
-        const isGovsEnabled = () => localStorage.getItem('menu_governorates_enabled') === '1';
-        const updateGovernorateFeeDisplay = (selectedName) => {
-            const feeEl = document.getElementById('governorate-fee');
-            const fee = isGovsEnabled() ? (governoratesMap[selectedName] || 0) : 0;
-            if (feeEl) {
-                feeEl.style.display = isGovsEnabled() ? 'block' : 'none';
-                if (isGovsEnabled()) feeEl.textContent = `أجور الشحن: ${fee ? fee.toLocaleString('ar-IQ') + ' د.ع' : '—'}`;
-            }
-            const shippingLineEl = document.getElementById('shipping-fee-line');
-            if (shippingLineEl) {
-                shippingLineEl.style.display = isGovsEnabled() ? '' : 'none';
-                if (isGovsEnabled()) shippingLineEl.textContent = fee ? `${fee.toLocaleString('ar-IQ')} د.ع` : '—';
-            }
-        };
-        async function loadGovernorates() {
-            if (!isGovsEnabled()) { governorates = []; governoratesMap = {}; return; }
-            // المحاولة أولاً من التخزين المحلي (لوحة التحكم)
-            try {
-                const raw = localStorage.getItem('menu_governorates');
-                if (raw) {
-                    const arr = JSON.parse(raw);
-                    if (Array.isArray(arr)) {
-                        governorates = arr.map(g => ({
-                            name: String((g.name || '')).trim(),
-                            shippingFee: Number(g.fee ?? g.shippingFee) || 0
-                        })).filter(g => g.name);
-                    }
-                }
-            } catch (e) {
-                console.warn('تعذر قراءة المحافظات من التخزين المحلي', e);
+                appAlertIcon.innerHTML = svg;
+                appAlert.classList.remove('hidden');
             }
 
-            // إن لم تتوفر محلياً، نحمّلها من ملف الأصول
-            if (!Array.isArray(governorates) || governorates.length === 0) {
-                try {
-                    const resp = await fetch('assets/governorates.json', { cache: 'no-store' });
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        if (Array.isArray(data)) {
-                            governorates = data.map(g => ({
-                                name: String((g.name || '')).trim(),
-                                shippingFee: Number(g.fee ?? g.shippingFee) || 0
-                            })).filter(g => g.name);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('فشل تحميل المحافظات من الأصول', e);
-                }
+            function hideAppAlert() {
+                if (!appAlert) return;
+                appAlert.classList.add('hidden');
             }
+            if (appAlertOk) appAlertOk.addEventListener('click', hideAppAlert);
+            if (appAlertBackdrop) appAlertBackdrop.addEventListener('click', hideAppAlert);
+            window.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAppAlert(); });
 
-            // بناء الخريطة للاستخدام السريع
-            governoratesMap = {};
-            governorates.forEach(g => { governoratesMap[g.name] = g.shippingFee; });
-        }
+            // --- حالة التطبيق ---
+            let cart = [];
+            let currentCategory = ""; // سيتم تحديده بعد التحميل من السيرفر
+            let settings = {};
+            let hero = {};
+            let announcements = {};
+            let categoriesList = [];
+            // مؤقت عرض الهيرو
+            let heroTimer = null;
+            // ... existing code ...
 
-        const loadCart = () => {
-            const savedCart = localStorage.getItem('restaurant_menu_cart');
-            if (savedCart) {
-                try {
-                    cart = JSON.parse(savedCart);
-                } catch (e) {
-                    console.error("Failed to parse cart from localStorage:", e);
-                    cart = [];
-                }
-            }
-        };
+            // عرض أزرار الأقسام (العلوي والسفلي)
+            function renderCategories() {
+                categoriesNav.innerHTML = '';
+                bottomNav.innerHTML = '';
+                const cats = (Array.isArray(categoriesList) && categoriesList.length)
+                  ? categoriesList
+                  : Object.keys(menuData);
+                cats.forEach(category => {
+                    // شريط الأقسام العلوي (بطاقات صور)
+                    const btn = document.createElement('button');
+                    btn.className = `category-btn relative overflow-hidden rounded-xl shadow-lg transition-transform shrink-0 w-28 aspect-square snap-start ring-offset-2 ring-offset-beige animate-fade-in touch-manipulation ${
+                        category === currentCategory ? 'ring-2 ring-accent' : 'hover:scale-[1.02]'
+                    }`;
+                    btn.innerHTML = `
+                        <img src="${categoryImages[category] || 'https://placehold.co/300x300'}" alt="${category}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" sizes="(max-width: 640px) 35vw, 20vw" />
+                        <span class="absolute bottom-2 left-2 right-2 bg-black/40 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-md text-center">${category}</span>
+                    `;
+                    btn.setAttribute('aria-label', `فتح قسم ${category}`);
+                    btn.dataset.category = category;
+                    categoriesNav.appendChild(btn);
 
-        const saveCart = () => {
-            localStorage.setItem('restaurant_menu_cart', JSON.stringify(cart));
-        };
+                    // شريط التنقل السفلي (يبنى ثابتاً لاحقاً)
+                    const navItem = document.createElement('button');
+                    navItem.className = `category-btn flex flex-col items-center text-xs transition-colors ${
+                        category === currentCategory ? 'text-accent' : 'text-coffee/60'
+                    }`;
+                    navItem.dataset.category = category;
+                    navItem.innerHTML = `
+                        ${navIcons[category] || ''}
+                        <span>${category}</span>
+                    `;
+                    // لا نضيف عناصر للفوتر هنا لأننا سنبنيه ثابتاً
+                });
 
-        const updateCartDisplay = () => {
-            const cartCountElement = document.getElementById('cart-count');
-            const navbarCartCountEl = document.getElementById('navbar-cart-count');
-            const cartListElement = document.getElementById('cart-items-list');
-            const cartTotalElement = document.getElementById('cart-total');
-            const emptyMessageElement = document.getElementById('empty-cart-message');
+                // بناء شريط التنقل السفلي الثابت
+                bottomNav.innerHTML = `
+                    <button id="btn-map" class="flex flex-col items-center text-xs text-coffee/80">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.5-7.5 11.25-7.5 11.25S4.5 18 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                        <span>الخريطة</span>
+                    </button>
+                    <button id="btn-menu" aria-label="فتح المنيو" class="w-16 h-16 -mt-7 rounded-full bg-accent text-white shadow-xl ring-4 ring-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
+                        <img src="fast-food.png" alt="منيو" class="w-10 h-10 object-contain filter brightness-0 invert" loading="eager" />
+                    </button>
+                    <button id="btn-more" class="flex flex-col items-center text-xs text-coffee/80">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm7 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm7 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                        </svg>
+                        <span>المزيد</span>
+                    </button>
+                `;
 
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const subtotalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            if (cartCountElement) cartCountElement.textContent = totalItems;
-            if (navbarCartCountEl) navbarCartCountEl.textContent = totalItems;
-
-            let shippingFee = 0;
-            try {
-                const infoRaw = localStorage.getItem('restaurant_customer_info');
-                const info = infoRaw ? JSON.parse(infoRaw) : {};
-                const isDelivery = (info.orderType || 'إرسال إلى العنوان') === 'إرسال إلى العنوان';
-                if (isDelivery && isGovsEnabled()) {
-                    const areaName = info.area || '';
-                    shippingFee = governoratesMap[areaName] || 0;
-                }
-            } catch {}
-            const finalTotal = subtotalPrice + shippingFee;
-
-            cartTotalElement.textContent = `${finalTotal.toLocaleString('ar-IQ')} د.ع`;
-            
-            // تحديث رسالة السلة الفارغة
-            if (cart.length === 0) {
-                emptyMessageElement.classList.remove('hidden');
-                cartListElement.innerHTML = '';
-            } else {
-                emptyMessageElement.classList.add('hidden');
-            }
-
-            // تحديث قائمة عناصر السلة
-            cartListElement.innerHTML = cart.map(item => `
-                <div class="flex justify-between items-center cart-item-bg p-3 rounded-xl shadow-sm border border-gray-200">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <img src="${item.img || ''}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md" onerror="this.style.display='none'" style="${item.img ? '' : 'display:none;'}">
-                        <div>
-                            <p class="font-bold text-main text-sm">${item.name}</p>
-                            ${item.variantLabel ? `<p class=\"text-xs text-gray-500\">الحجم: ${item.variantLabel}${item.variantType ? ' — ' + item.variantType : ''}</p>` : ''}
-                            <p class="text-xs text-gray-500">${item.price.toLocaleString('ar-IQ')} د.ع للوحدة</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <button onclick="updateQuantity('${item.uid}', -1)" class="p-1 rounded-full bg-[#ea580c] hover:bg-[#ea580c] transition">
-                            <i data-lucide="minus" class="w-4 h-4 text-white"></i>
-                        </button>
-                        <span class="font-bold text-lg text-main">${item.quantity}</span>
-                        <button onclick="updateQuantity('${item.uid}', 1)" class="p-1 rounded-full bg-[#ea580c] hover:bg-[#ea580c] transition">
-                            <i data-lucide="plus" class="w-4 h-4 text-white"></i>
-                        </button>
-                        <button onclick="removeItemFromCart('${item.uid}')" class="p-1 rounded-full bg-red-500 hover:bg-red-600 transition" title="حذف">
-                            <i data-lucide="trash-2" class="w-4 h-4 text-white"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            // إعادة تفعيل أيقونات Lucide داخل السلة
-            lucide.createIcons();
-        };
-
-        const addItemToCart = (itemId, variantKey = null, sourceEl = null) => {
-            // البحث عن العنصر في جميع أقسام القائمة
-            const item = menuData.flatMap(section => section.items).find(i => i.id === itemId);
-            if (!item) return;
-
-            let unitPrice = item.price || 0;
-            let variantLabel = null;
-            let variantType = null;
-            let uid = String(itemId);
-
-            if (variantKey && Array.isArray(item.variants)) {
-                const v = item.variants.find(v => String(v.key) === String(variantKey));
-                if (v) {
-                    unitPrice = Number(v.price) || unitPrice;
-                    variantLabel = v.label || String(variantKey);
-                    variantType = v.variantType || null;
-                    uid = `${itemId}:${String(variantKey)}`;
-                }
-            }
-
-            const existingItem = cart.find(i => i.uid === uid);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    uid,
-                    id: itemId,
-                    name: item.name,
-                    img: item.img || '',
-                    price: unitPrice,
-                    quantity: 1,
-                    variantLabel,
-                    variantType
+                // إضافة مستمعي الأحداث للأزرار الجديدة
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.addEventListener('click', () => changeCategory(btn.dataset.category));
+                });
+                document.getElementById('btn-map')?.addEventListener('click', () => {
+                    const link = settings.mapLink || 'https://maps.google.com';
+                    window.open(link, '_blank');
+                });
+                document.getElementById('btn-menu')?.addEventListener('click', () => {
+                    document.getElementById('items-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                document.getElementById('btn-more')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (moreMenu) moreMenu.classList.toggle('hidden');
+                });
+                // إغلاق القائمة عند الضغط خارجها
+                window.addEventListener('click', (e) => {
+                    if (!moreMenu || moreMenu.classList.contains('hidden')) return;
+                    const target = e.target;
+                    const btnMore = document.getElementById('btn-more');
+                    if (btnMore && (btnMore === target || (target.closest && target.closest('#btn-more')))) return;
+                    if (target.closest && target.closest('#more-menu')) return;
+                    moreMenu.classList.add('hidden');
                 });
             }
 
-            saveCart();
-            updateCartDisplay();
-
-            // تغذية راجعة فورية: تحويل علامة + إلى صح مؤقتًا
-            try {
-                if (sourceEl) {
-                    // تبديل الأيقونة إلى صح
-                    sourceEl.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-white"></i>';
-                    if (window.lucide && typeof lucide.createIcons === 'function') {
-                        lucide.createIcons();
+            // عرض المنتجات حسب القسم
+            function renderMenuItems(category) {
+                if (currentCategoryTitle) {
+                    currentCategoryTitle.textContent = category;
+                }
+                // عرض اسم القسم الصغير في الهيدر عندما لا يظهر المركّب
+                const siteSectionNameEl = document.getElementById('site-section-name');
+                if (siteSectionNameEl) siteSectionNameEl.textContent = category || '';
+                itemsContainer.innerHTML = '';
+                const list = Array.isArray(menuData[category]) ? menuData[category] : [];
+                if (!list.length) {
+                    itemsContainer.innerHTML = `<p class="text-center text-coffee/70 mt-10">لا توجد أصناف في هذا القسم بعد.</p>`;
+                    return;
+                }
+                list.forEach(item => {
+                    // إذا كان العنصر عنوانًا فرعيًا، اعرضه كفاصل بصري وليس بطاقة منتج
+                    if (item && item.type === 'subheading') {
+                        const sub = document.createElement('div');
+                        sub.className = 'subheading-marker col-span-full w-full px-4 py-2 my-3 bg-[#F5E9D5]/80 text-coffee font-bold rounded-lg animate-fade-in';
+                        sub.setAttribute('data-subheading', item.name || '');
+                        sub.textContent = item.name;
+                        itemsContainer.appendChild(sub);
+                        return;
                     }
-                    // تغيير الخلفية مؤقتًا
-                    const originalBg = sourceEl.style.backgroundColor;
-                    sourceEl.style.backgroundColor = '#ea580c';
-                    setTimeout(() => {
-                        // إعادة الأيقونة إلى + وإرجاع الخلفية الأصلية
-                        sourceEl.innerHTML = '<i data-lucide="plus" class="w-4 h-4 text-white"></i>';
-                        sourceEl.style.backgroundColor = originalBg || '#ea580c';
-                        if (window.lucide && typeof lucide.createIcons === 'function') {
-                            lucide.createIcons();
+
+                    const itemCard = document.createElement('div');
+                    // تغيير: تصميم الكارت من أفقي إلى عمودي (مربع)
+                    itemCard.className = 'bg-[#F5E9D5]/60 rounded-xl shadow-md hover:shadow-lg overflow-hidden flex flex-col animate-slide-up transition duration-300 hover:scale-[1.02]';
+                    itemCard.innerHTML = `
+                        <div class="relative w-full pt-[80%]">
+                            <img src="${item.image}" alt="${item.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1">
+                            <h3 class="font-bold text-md lg:text-lg text-coffee truncate">${item.name}</h3>
+                            <p class="text-sm lg:text-base text-coffee/80 mt-1 break-words flex-1 line-clamp-2">${item.description}</p>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="font-bold text-md lg:text-lg text-coffee whitespace-nowrap">${item.price} د.ع</span>
+                                <button class="add-to-cart-btn bg-red-600 text-white w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full hover:bg-red-700 transition-colors flex-shrink-0 touch-manipulation" aria-label="أضف ${item.name} إلى السلة">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    // تحسين الوصول: اعتبار البطاقة عنصر قائمة قابل للتركيز
+                    itemCard.setAttribute('role', 'listitem');
+                    itemCard.setAttribute('tabindex', '0');
+                    itemCard.setAttribute('aria-label', `${item.name} - فتح التفاصيل`);
+
+                    const addBtn = itemCard.querySelector('.add-to-cart-btn');
+                    addBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        flashAddFeedback(addBtn);
+                        addToCart(item);
+                    });
+
+                    itemCard.addEventListener('click', (e) => {
+                        const el = e.target;
+                        if (el && typeof el.closest === 'function' && el.closest('.add-to-cart-btn')) return;
+                        openItemPreview(item);
+                    });
+
+                    // فتح التفاصيل عبر لوحة المفاتيح
+                    itemCard.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openItemPreview(item);
                         }
-                    }, 1000);
-                }
-            } catch (e) {}
+                    });
 
-            console.log(`تم إضافة ${item.name}${variantLabel ? ' (' + variantLabel + ')' : ''} إلى السلة.`);
-        };
-        
-        const updateQuantity = (uid, change) => {
-            const itemIndex = cart.findIndex(i => i.uid === uid);
-
-            if (itemIndex > -1) {
-                cart[itemIndex].quantity += change;
-
-                if (cart[itemIndex].quantity <= 0) {
-                    cart.splice(itemIndex, 1); // إزالة العنصر إذا كانت الكمية صفر أو أقل
-                }
-
-                saveCart();
-                updateCartDisplay();
+                    itemsContainer.appendChild(itemCard);
+                });
+                // بعد إعادة العرض، فعّل تتبع العناوين الفرعية لتحديث العنوان في الهيدر عند التمرير
+                ensureStickyTitle();
             }
-        }
-
-        const removeItemFromCart = (uid) => {
-            const idx = cart.findIndex(i => i.uid === uid);
-            if (idx > -1) {
-                cart.splice(idx, 1);
-                saveCart();
-                updateCartDisplay();
+            // عنوان الهيدر يتغيّر حسب العنوان الفرعي الظاهر
+            const headerEl = document.querySelector('header');
+            const stickyComposite = document.getElementById('sticky-composite');
+            const stickySection = document.getElementById('sticky-section');
+            const stickySubheading = document.getElementById('sticky-subheading');
+            const siteTitleEl = document.getElementById('site-title');
+            const siteSectionNameElGlobal = document.getElementById('site-section-name');
+            const scrollUpBtn = document.getElementById('scroll-up-btn');
+            const defaultBrand = (siteTitleEl?.getAttribute('data-default') || siteTitleEl?.textContent || '');
+            function getSubheadings() {
+                try { return Array.from(itemsContainer.querySelectorAll('.subheading-marker')); } catch { return []; }
             }
-        };
+            function updateStickyTitle() {
+                const headerH = headerEl ? headerEl.offsetHeight : 0;
+                const subs = getSubheadings();
+                let current = null;
+                for (const el of subs) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top <= headerH + 4) current = el; // آخر عنوان فرعي اجتاز الهيدر
+                }
+                if (current) {
+                    const t = (current.getAttribute('data-subheading') || current.textContent || '').trim();
+                    if (stickyComposite) stickyComposite.classList.remove('hidden');
+                    if (siteTitleEl) siteTitleEl.classList.add('hidden');
+                    if (siteSectionNameElGlobal) siteSectionNameElGlobal.classList.add('hidden');
+                    if (stickySection) stickySection.textContent = (typeof currentCategory !== 'undefined' && currentCategory) ? currentCategory : (siteSectionNameElGlobal?.textContent || '');
+                    if (stickySubheading) stickySubheading.textContent = t || '';
+                } else {
+                    const itemsTop = itemsContainer ? itemsContainer.getBoundingClientRect().top : Infinity;
+                    const beyondIntro = itemsTop <= headerH + 4; // دخلنا منطقة العناصر/القسم
+                    if (subs.length === 0 && beyondIntro) {
+                        // لا توجد عناوين فرعية: اعرض اسم القسم بدل البراند أثناء التمرير داخل القسم
+                        if (stickyComposite) stickyComposite.classList.add('hidden');
+                        if (siteTitleEl) { siteTitleEl.classList.remove('hidden'); siteTitleEl.textContent = (typeof currentCategory !== 'undefined' && currentCategory) ? currentCategory : defaultBrand; }
+                        if (siteSectionNameElGlobal) siteSectionNameElGlobal.classList.add('hidden');
+                    } else {
+                        // أعلى الصفحة أو قسم فيه عناوين فرعية ولم يظهر عنوان منها بعد: اعرض البراند الافتراضي
+                        if (stickyComposite) stickyComposite.classList.add('hidden');
+                        if (siteTitleEl) { siteTitleEl.classList.remove('hidden'); siteTitleEl.textContent = defaultBrand; }
+                        if (siteSectionNameElGlobal) siteSectionNameElGlobal.classList.add('hidden');
+                    }
+                }
+                // إظهار/إخفاء زر السهم للأعلى حسب التمرير
+                if (scrollUpBtn) {
+                    const docH = Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0);
+                    const viewH = window.innerHeight || 0;
+                    const scrollable = Math.max(docH - viewH, 0);
+                    const threshold = Math.max(scrollable * 0.5, headerH + 20);
+                    if (window.scrollY > threshold) scrollUpBtn.classList.remove('hidden');
+                    else scrollUpBtn.classList.add('hidden');
+                }
+            }
+            let stickyTitleInitialized = false, scrollingTick = false;
+            function onScrollStickyTitle() {
+                if (scrollingTick) return;
+                scrollingTick = true;
+                requestAnimationFrame(() => { scrollingTick = false; updateStickyTitle(); });
+            }
+            function ensureStickyTitle() {
+                if (!stickyTitleInitialized) {
+                    window.addEventListener('scroll', onScrollStickyTitle, { passive: true });
+                    window.addEventListener('resize', onScrollStickyTitle);
+                    // نقر زر السهم: انتقل إلى بداية الأقسام أعلى شبكة العناصر
+                    if (scrollUpBtn) {
+                        scrollUpBtn.addEventListener('click', () => {
+                            const h = headerEl ? headerEl.offsetHeight : 0;
+                            const targetTop = itemsContainer ? (window.scrollY + itemsContainer.getBoundingClientRect().top - h - 8) : 0;
+                            window.scrollTo({ top: Math.max(targetTop, 0), behavior: 'smooth' });
+                        });
+                    }
+                    stickyTitleInitialized = true;
+                }
+                onScrollStickyTitle();
+            }
+            // تطبيق إعدادات الهيرو على الصفحة
+            function applyHeroToPage() {
+                const section = document.getElementById('hero-section');
+                const img = document.getElementById('hero-image');
+                const titleTextEl = document.getElementById('hero-title-text');
+                const subtitleEl = document.getElementById('hero-subtitle');
+                if (!section) return;
+                const enabled = hero && (hero.enabled !== false);
+                section.classList.toggle('hidden', !enabled);
+                if (!enabled) { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } return; }
 
-        const checkout = () => {
-            if (cart.length > 0) {
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                let shippingFee = 0;
+                const images = Array.isArray(hero?.images) ? hero.images.filter(Boolean) : [];
+                const first = images[0] || img?.getAttribute('src') || 'https://placehold.co/600x400/331A12/FFCC80?text=أطباقنا+المميزة';
+                if (img) img.src = first;
+
+                if (titleTextEl) titleTextEl.textContent = (hero?.title || 'أهلاً بك في');
+                const defaultSubtitle = document.getElementById('site-title')?.textContent || 'القائمة';
+                if (subtitleEl) subtitleEl.textContent = (hero?.subtitle || defaultSubtitle);
+
+                // تشغيل تلقائي
+                if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
+                const autoplay = !!hero?.autoplay;
+                let interval = Number(hero?.intervalMs || 4000);
+                if (interval > 0 && interval < 50) interval *= 1000;
+                if (autoplay && images.length > 1) {
+                    let idx = 0;
+                    heroTimer = setInterval(() => {
+                        idx = (idx + 1) % images.length;
+                        if (img) img.src = images[idx];
+                    }, interval);
+                }
+            }
+
+            // عرض محتويات السلة
+            function renderCart() {
+                cartItemsContainer.innerHTML = '';
+                let total = 0;
+
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = `<p class="text-center text-coffee/70 mt-10">سلتك فارغة.</p>`;
+                } else {
+                    cart.forEach(item => {
+                        const cartItem = document.createElement('div');
+                        cartItem.className = 'flex justify-between items-center bg-[#F5E9D5]/40 p-3 rounded-lg';
+                        cartItem.innerHTML = `
+                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                                <img src="${item.image || 'shopping-bag.png'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-coffee whitespace-normal break-words">${item.name}</h4>
+                                    <div class="mt-1 flex items-center gap-3 flex-wrap">
+                                        <span class="text-coffee font-semibold">${item.price} د.ع</span>
+                                        <div class="flex items-center gap-2">
+                                            <button data-id="${item.id}" class="cart-quantity-change" data-change="-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-coffee/70 hover:text-accent"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                            </button>
+                                            <span class="font-bold text-coffee w-6 text-center">${item.quantity}</span>
+                                            <button data-id="${item.id}" class="cart-quantity-change" data-change="1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-coffee/70 hover:text-accent"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <button data-id="${item.id}" class="cart-remove-item p-2 rounded-md hover:bg-red-50" aria-label="حذف" title="حذف">
+                                    <img src="delete.png" alt="حذف" class="w-6 h-6 object-contain" draggable="false" />
+                                </button>
+                            </div>
+                        `;
+                        cartItemsContainer.appendChild(cartItem);
+                        total += item.price * item.quantity;
+                    });
+                }
+                cartTotalEl.textContent = `${total} د.ع`;
+                updateCartCount();
+                
+                // إضافة المستمعات لأزرار السلة
+                cartItemsContainer.querySelectorAll('.cart-quantity-change').forEach(btn => {
+                    btn.addEventListener('click', () => updateCartQuantity(btn.dataset.id, parseInt(btn.dataset.change)));
+                });
+                cartItemsContainer.querySelectorAll('.cart-remove-item').forEach(btn => {
+                    btn.addEventListener('click', () => removeFromCart(btn.dataset.id));
+                });
+
+                // نموذج بيانات الزبون داخل منطقة السلة (قابل للتمرير)
+                const formDiv = document.createElement('div');
+                formDiv.className = 'mt-4 space-y-3 border-t border-coffee/20 pt-4';
+                formDiv.innerHTML = `
+                    <div class="space-y-1">
+                        <label class="block text-coffee font-semibold">ملاحظة الزبون</label>
+                        <textarea id="customer-note" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-coffee font-semibold">الاسم</label>
+                        <input id="customer-name" type="text" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-coffee font-semibold">الرقم</label>
+                        <input id="customer-phone" type="tel" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-coffee font-semibold">العنوان</label>
+                        <input id="customer-address" type="text" class="w-full border rounded-lg px-3 py-2" required />
+                    </div>
+                    <div>
+                        <label class="block text-coffee font-semibold mb-1">عملية الدفع</label>
+                        <select id="payment-method" class="w-full border rounded-lg px-3 py-2">
+                            <option value="cash" selected>نقد</option>
+                        </select>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(formDiv);
+                updateCartItemsHeight();
+            }
+
+            // تحديث عداد السلة
+            function updateCartCount() {
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                if (totalItems > 0) {
+                    cartCountBubble.textContent = totalItems;
+                    cartCountBubble.classList.remove('hidden');
+                } else {
+                    cartCountBubble.classList.add('hidden');
+                }
+            }
+
+            // --- دوال التحكم ---
+
+            function getOrderInfo() {
+                const note = (document.getElementById('customer-note')?.value || '').trim();
+                const name = (document.getElementById('customer-name')?.value || '').trim();
+                const phone = (document.getElementById('customer-phone')?.value || '').trim();
+                const address = (document.getElementById('customer-address')?.value || '').trim();
+                const payment = (document.getElementById('payment-method')?.value || 'cash');
+                return { note, name, phone, address, payment };
+            }
+
+            // إرسال مخفي وسريع إلى Google Sheets (عبر Web App)
+            const SHEETS_ENDPOINT_DEFAULT = '';
+            function getSheetsEndpoint() {
                 try {
-                    const info = JSON.parse(localStorage.getItem('restaurant_customer_info') || '{}') || {};
-                    const isDelivery = (info.orderType || 'إرسال إلى العنوان') === 'إرسال إلى العنوان';
-                    if (isDelivery) shippingFee = governoratesMap[info.area || ''] || 0;
+                    return (settings && settings.sheetsWebhookUrl) || SHEETS_ENDPOINT_DEFAULT;
+                } catch {
+                    return SHEETS_ENDPOINT_DEFAULT;
+                }
+            }
+
+            function sendOrderToSheetsSilent(payload) {
+                const url = getSheetsEndpoint();
+                if (!url) return; // إذا لم يُضبط الرابط، نتجاهل بدون تعطيل التجربة
+                const data = JSON.stringify(payload || {});
+                // نحاول أولًا باستخدام sendBeacon ليضمن الإرسال حتى عند تبديل الصفحة
+                try {
+                    if (typeof navigator.sendBeacon === 'function') {
+                        const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+                        navigator.sendBeacon(url, blob);
+                        return; // لا حاجة لمحاولة fetch إذا نجح sendBeacon
+                    }
                 } catch {}
-                const total = subtotal + shippingFee;
-                const noteEl = document.getElementById('customer-note');
-                const noteText = noteEl ? (noteEl.value || '').trim() : '';
-                const customerInfo = JSON.parse(localStorage.getItem('restaurant_customer_info') || '{}');
-                // تم استبدال alert بنص يظهر في الكونسول لتجنب مشاكل الـ iframe
-                console.log(
-                    `جارٍ إتمام طلبك بقيمة: ${total.toLocaleString('ar-IQ')} د.ع.` +
-                    `\nالاسم: ${customerInfo.name || '—'}` +
-                    `\nالرقم: ${customerInfo.phone || '—'}` +
-                    `\nنوع الشراء: ${customerInfo.purchaseType || 'نقد'}` +
-                    `\nنوع الطلب: ${customerInfo.orderType || 'إرسال إلى العنوان'}` +
-                    `\nالعنوان: ${customerInfo.address || '—'}` +
-                    `\nالمنطقة: ${customerInfo.area || '—'}` +
-                    `\nملاحظة الزبون: ${noteText || 'بدون'}` +
-                    `\nشكراً لطلبك!`
-                );
-                
-                // بدلاً من alert()، يمكن استخدام رسالة UI مؤقتة هنا إذا أردت.
-                // حاليًا سأكتفي بمسح السلة وإغلاق النافذة.
-                
-                cart = []; // إفراغ السلة
-                saveCart();
-                updateCartDisplay();
-                toggleCart(false);
-                if (noteEl) { noteEl.value = ''; localStorage.removeItem('restaurant_menu_cart_note'); }
-            } else {
-                console.log('عربة التسوق فارغة. يرجى إضافة عناصر أولاً.');
+                // بديل fetch مع no-cors و keepalive
+                try {
+                    fetch(url, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: data,
+                        keepalive: true,
+                    }).catch(() => {});
+                } catch (e) { /* إرسال صامت */ }
             }
-        };
-        
-        // تم تعديل وظيفة checkout لتجنب استخدام alert() وفقًا لتعليمات المنصة.
 
-        // ------------------ واجهة المستخدم (UI) ------------------
+            function buildOrderMessage(info) {
+                // منسق أرقام عربي بدون كسور
+                const NF = new Intl.NumberFormat('ar', { maximumFractionDigits: 0 });
+                const fmtNum = n => NF.format(Math.round(Number(n) || 0));
+                const fmtPrice = n => `${fmtNum(n)} د.ع`;
+                const toArabicDigits = s => String(s || '').replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
-        // دالة لعرض/إخفاء نافذة السلة الجانبية
-        const toggleCart = (show) => {
-            const cartSidebar = document.getElementById('cart-sidebar');
-            const cartOverlay = document.getElementById('cart-overlay');
-            if (show) {
-                cartSidebar.classList.add('open');
-                cartOverlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
-                document.body.classList.add('cart-open'); // إخفاء النافبار أثناء فتح السلة
-            } else {
-                cartSidebar.classList.remove('open');
-                cartOverlay.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-                document.body.classList.remove('cart-open');
-            }
-        };
+                const lines = [];
+                lines.push('*فاتورة الطلب*');
+                lines.push('*الأصناف:*');
+                let total = 0;
 
-        const fabCartBtn = document.getElementById('fab-cart-btn'); if (fabCartBtn) fabCartBtn.addEventListener('click', () => toggleCart(true));
-        document.getElementById('close-cart-btn').addEventListener('click', () => toggleCart(false));
-
-        // إعداد وضبط الفرع من قاعدة البيانات ثم إعداد سطر الفرع
-        async function loadBranchConfigAndApply() {
-            const defaultKey = 'najaf';
-            const params = new URLSearchParams(window.location.search);
-            const key = params.get('branch') || localStorage.getItem('restaurant_branch') || defaultKey;
-            try {
-                const resp = await fetch('assets/branches.json', { cache: 'no-store' });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    const cfg = data[key] || data[defaultKey] || {};
-                    window.BRANCH_CONFIG = cfg;
-                    // تحديث اسم الفرع في الهيدر
-                    const headerBranchEl = document.getElementById('branch-name');
-                    if (headerBranchEl && cfg.name) headerBranchEl.textContent = cfg.name;
-                    // تحديث زر الاتصال في الهيدر
-                    const headerTelLink = document.querySelector('header a[href^="tel:"]');
-                    if (headerTelLink && cfg.phone) headerTelLink.href = `tel:${cfg.phone}`;
-                    // حفظ الأرقام في التخزين المحلي لاستخدامها لاحقاً
-                    if (cfg.phone) localStorage.setItem('restaurant_phone_number', String(cfg.phone));
-                    if (cfg.whatsapp) localStorage.setItem('restaurant_whatsapp_number', String(cfg.whatsapp));
-                }
-            } catch (e) {
-                console.warn('تعذر تحميل إعداد الفرع', e);
-            }
-            applyLocalSettings();
-            // إعداد سطر اسم الفرع أعلى الفاتورة الآن
-            const labelEl = document.getElementById('order-branch-label');
-            const headerNameEl = document.getElementById('branch-name') || document.querySelector('header .text-xs.text-gray-600');
-            const branchText = headerNameEl ? headerNameEl.textContent.trim() : '';
-            if (labelEl) {
-                if (branchText) {
-                    labelEl.textContent = branchText;
-                    const lineEl = document.getElementById('order-branch-line');
-                    if (lineEl) lineEl.classList.remove('hidden');
+                if (!cart.length) {
+                    lines.push('- لا توجد أصناف.');
                 } else {
-                    const lineEl = document.getElementById('order-branch-line');
-                    if (lineEl) lineEl.classList.add('hidden');
+                    cart.forEach(it => {
+                        const qty = fmtNum(it.quantity);
+                        const price = fmtPrice((Number(it.price) || 0) * (Number(it.quantity) || 0));
+                        lines.push(`- *${it.name}* x ${qty} — *${price}*`);
+                        total += (Number(it.price) || 0) * (Number(it.quantity) || 0);
+                    });
+                }
+
+                lines.push(`*المجموع:* *${fmtPrice(total)}*`);
+                lines.push(`*الاسم:* ${info.name ? `*${info.name}*` : ''}`);
+                lines.push(`*الرقم:* ${info.phone ? `*${toArabicDigits(info.phone)}*` : ''}`);
+                lines.push(`*العنوان:* ${info.address ? `*${info.address}*` : ''}`);
+                if (info.note) lines.push(`*ملاحظة:* ${info.note}`);
+
+                return lines.join('\n');
+            }
+
+            function submitOrder() {
+                if (!cart.length) {
+                    showAppAlert('السلة فارغة. يرجى إضافة عناصر أولاً.', 'warning');
+                    return;
+                }
+                const info = getOrderInfo();
+                // نكتفي بالاسم والرقم ليتم الإرسال إلى Google Sheets
+                if (!info.name || !info.phone) {
+                    showAppAlert('يرجى إدخال الاسم والرقم لإتمام الطلب.', 'warning');
+                    return;
+                }
+                // جهّز رسالة الطلب وافتح واتساب فورًا أولًا
+                const message = buildOrderMessage(info);
+                const waNum = (settings.whatsappNumber || '').replace(/[^0-9]/g, '');
+                if (waNum) {
+                    const url = `https://wa.me/${waNum}?text=${encodeURIComponent(message)}`;
+                    window.open(url, '_blank');
+                } else {
+                    showAppAlert('تم تجهيز الطلب. لا يوجد رقم واتساب في الإعدادات ليتم الإرسال المباشر.', 'info');
+                    console.log(message);
+                }
+
+                // إرسال Google Sheets لاحقًا بصمت وبعد فتح الواتساب لضمان عدم التأثير
+                try {
+                    const orderTotal = cart.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0);
+                    const payload = {
+                        name: info.name,
+                        phone: info.phone,
+                        total: Math.round(orderTotal || 0),
+                        timestamp: new Date().toISOString(),
+                    };
+                    setTimeout(() => { try { sendOrderToSheetsSilent(payload); } catch {} }, 0);
+                } catch {}
+            }
+
+            function updateCallLink() {
+                const cNum = (settings.contactNumber || '').trim();
+                if (callOrderBtn) {
+                    if (cNum) {
+                        const tel = 'tel:' + cNum.replace(/[^0-9+]/g, '');
+                        callOrderBtn.setAttribute('href', tel);
+                    } else {
+                        callOrderBtn.setAttribute('href', '#');
+                    }
                 }
             }
-        }
-        function applyLocalSettings() {
-            try {
-              const savedName = localStorage.getItem('restaurant_menu_name') || '';
-              const headerEl = document.getElementById('branch-name');
-              if (headerEl && savedName) headerEl.textContent = savedName;
-            } catch {}
-            try {
-              const savedPhone = localStorage.getItem('restaurant_phone_number') || '';
-              const telLink = document.querySelector('header a[href^="tel:"]');
-              if (telLink && savedPhone) telLink.href = `tel:${savedPhone}`;
-            } catch {}
-            try {
-              const logo = localStorage.getItem('restaurant_logo_url') || '';
-              const logoEl = document.getElementById('brand-logo');
-              if (logoEl) { if (logo) { logoEl.src = logo; logoEl.style.display='block'; } else { logoEl.style.display='none'; } }
-              const heroOverlay = document.getElementById('hero-overlay');
-              if (heroOverlay) { heroOverlay.style.background = logo ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)'; }
-            } catch {}
-        }
-        async function refreshGovernoratesSelect() {
-            const areaEl = document.getElementById('customer-area');
-            const areaWrapper = document.getElementById('customer-area-wrapper');
-            if (!areaEl) return;
-            if (!isGovsEnabled()) { if (areaWrapper) areaWrapper.style.display = 'none'; return; }
-            await loadGovernorates();
-            const current = areaEl.value;
-            const areaOptions = ['<option value="">اختر المحافظة</option>'].concat(
-                governorates.map(g => `<option value="${g.name}">${g.name}</option>`)
-            ).join('');
-            areaEl.innerHTML = areaOptions;
-            if (current) areaEl.value = current;
-            if (areaWrapper) areaWrapper.style.display = 'block';
-            updateGovernorateFeeDisplay(areaEl.value);
-        }
-        window.addEventListener('focus', applyLocalSettings);
-        document.addEventListener('visibilitychange', function(){ if (!document.hidden) { applyLocalSettings(); refreshGovernoratesSelect(); } });
-        window.addEventListener('focus', refreshGovernoratesSelect);
-        loadBranchConfigAndApply();
-        // فتح/إخفاء بحث داخل النافبار مباشرة
-        const toggleSearchBtn = document.getElementById('toggle-search-btn');
-        if (toggleSearchBtn) {
-            toggleSearchBtn.addEventListener('click', () => {
-                const overlay = document.getElementById('navbar-search-overlay');
-                const panel = document.getElementById('search-bar-panel');
-                if (!overlay) return;
-                const willOpen = overlay.classList.contains('hidden');
-                if (willOpen) {
-                    overlay.classList.remove('hidden');
-                    if (panel) panel.classList.add('hidden');
-                    const inputNavbar = document.getElementById('search-input-navbar');
-                    if (inputNavbar) setTimeout(() => inputNavbar.focus(), 100);
+
+            function updateSocialLinks() {
+                const ig = (settings.instagramLink || '').trim();
+                const fb = (settings.facebookLink || '').trim();
+                const igBtn = document.getElementById('instagram-btn');
+                const fbBtn = document.getElementById('facebook-btn');
+                if (igBtn) igBtn.setAttribute('href', ig || 'https://instagram.com/');
+                if (fbBtn) fbBtn.setAttribute('href', fb || 'https://facebook.com/');
+            }
+
+            function updateCartItemsHeight() {
+                try {
+                    const header = document.getElementById('cart-header');
+                    const footer = document.getElementById('cart-footer');
+                    const drawerH = cartDrawer ? cartDrawer.clientHeight : window.innerHeight;
+                    const hH = header ? header.offsetHeight : 0;
+                    const fH = footer ? footer.offsetHeight : 0;
+                    const h = Math.max(0, drawerH - hH - fH);
+                    cartItemsContainer.style.height = h + 'px';
+                } catch {}
+            }
+
+            // تغيير القسم
+            function changeCategory(category) {
+                currentCategory = category;
+                renderCategories(); // لإعادة تلوين الزر النشط
+                renderMenuItems(category);
+
+                // تمرير زر القسم النشط ليظهر على اليمين مع نفس الهامش
+                const activeBtn = categoriesNav.querySelector(`[data-category="${category}"]`);
+                if (activeBtn) {
+                    const styles = getComputedStyle(categoriesNav);
+                    const pr = parseFloat(styles.paddingRight) || 0; // يمين الحاوية
+                    // جعل الزر يظهر عند نهاية (يمين) الحاوية ثم نضبط الإزاحة للهامش
+                    activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'end', block: 'nearest' });
+                    const targetRight = activeBtn.offsetLeft + activeBtn.offsetWidth; // نهاية العنصر بالنسبة للحاوية
+                    const desired = targetRight - categoriesNav.clientWidth + pr; // محافظاً على هامش يمين الحاوية
+                    categoriesNav.scrollTo({ left: desired, behavior: 'smooth' });
+                }
+            }
+
+            // فتح/إغلاق السلة
+            function toggleCart(show) {
+                if (show) {
+                    cartModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        cartDrawer.classList.remove('translate-x-full');
+                        setTimeout(updateCartItemsHeight, 30);
+                    }, 10); // تأخير بسيط لبدء التحريك
                 } else {
-                    overlay.classList.add('hidden');
+                    cartDrawer.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        cartModal.classList.add('hidden');
+                    }, 300); // إخفاء بعد انتهاء التحريك
+                }
+            }
+
+            // معاينة المنتج
+            function openItemPreview(item) {
+                window.previewItem = item;
+                if (itemPreviewImage) itemPreviewImage.src = item.image || 'https://placehold.co/600x400/EEE/333?text=No+Image';
+                if (itemPreviewName) itemPreviewName.textContent = item.name || '';
+                if (itemPreviewDescription) itemPreviewDescription.textContent = item.description || '';
+                if (itemPreviewPrice) itemPreviewPrice.textContent = `${item.price} د.ع`;
+                itemModal.classList.remove('hidden');
+            }
+            function closeItemPreview() {
+                itemModal.classList.add('hidden');
+                window.previewItem = null;
+            }
+
+            // تأثير بصري عند إضافة المنتج (تحويل + إلى ✓ مؤقتًا دون تغيير اللون)
+            function flashAddFeedback(btn) {
+                if (!btn) return;
+                const originalHTML = btn.innerHTML;
+                try {
+                    btn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                    `;
+                } catch {}
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 900);
+            }
+
+            // إظهار رسالة "تم إضافته للسلة" داخل زر المعاينة مؤقتًا
+            function flashPreviewAdded(btn) {
+                if (!btn) return;
+                const originalHTML = btn.innerHTML;
+                const originalDisabled = btn.disabled;
+                try {
+                    btn.disabled = true;
+                    btn.innerHTML = 'تم إضافته للسلة';
+                } catch {}
+                setTimeout(() => {
+                    btn.disabled = originalDisabled;
+                    btn.innerHTML = originalHTML;
+                }, 1200);
+            }
+
+            // إضافة للسلة
+            function addToCart(item) {
+                const existingItem = cart.find(cartItem => cartItem.id === item.id);
+                if (existingItem) {
+                    existingItem.quantity++;
+                } else {
+                    cart.push({ ...item, quantity: 1 });
+                }
+                renderCart();
+            }
+
+            // تحديث كمية المنتج
+            function updateCartQuantity(itemId, change) {
+                const item = cart.find(cartItem => cartItem.id == itemId);
+                if (item) {
+                    item.quantity += change;
+                    if (item.quantity <= 0) {
+                        removeFromCart(itemId);
+                    } else {
+                        renderCart();
+                    }
+                }
+            }
+
+            // إزالة من السلة
+            function removeFromCart(itemId) {
+                cart = cart.filter(cartItem => cartItem.id != itemId);
+                renderCart();
+            }
+
+            // --- تشغيل التطبيق ---
+            
+            // إضافة مستمعي الأحداث الرئيسية
+            openCartBtn.addEventListener('click', () => toggleCart(true));
+            closeCartBtn.addEventListener('click', () => toggleCart(false));
+            cartModal.addEventListener('click', (e) => {
+                // إغلاق عند الضغط على الخلفية
+                if (e.target === cartModal) {
+                    toggleCart(false);
                 }
             });
-        }
 
-        // إغلاق عند الضغط خارج حقل الإدخال داخل النافبار
-        const navbarOverlay = document.getElementById('navbar-search-overlay');
-        if (navbarOverlay) {
-            navbarOverlay.addEventListener('click', (e) => {
-                // أغلق فقط عند الضغط على مساحة التراكب (خارج الحقل)
-                if (e.target === navbarOverlay) {
-                    navbarOverlay.classList.add('hidden');
-                }
+            // مستمعات معاينة المنتج
+            closeItemBtn.addEventListener('click', closeItemPreview);
+            itemModal.addEventListener('click', (e) => { if (e.target === itemModal) closeItemPreview(); });
+            itemPreviewAdd.addEventListener('click', () => {
+                if (window.previewItem) addToCart(window.previewItem);
+                // لا تفتح السلة، اعرض رسالة تأكيد داخل الزر
+                flashPreviewAdded(itemPreviewAdd);
             });
-        }
 
-        // زر إغلاق “x”
-        const navbarCloseBtn = document.getElementById('navbar-search-close');
-        if (navbarCloseBtn) {
-            navbarCloseBtn.addEventListener('click', () => {
-                const overlay = document.getElementById('navbar-search-overlay');
-                if (overlay) overlay.classList.add('hidden');
-            });
-        }
+            // العرض الأولي
+            // اضافة: تحميل البيانات من السيرفر وتجهيط
+            async function loadInitialData() {
+                let cats = [];
+                let items = [];
+                // جرّب API أولاً
+                try {
+                    const [catsResp, menuResp] = await Promise.all([
+                        fetch('/api/categories', { cache: 'no-store' }),
+                        fetch('/api/menu', { cache: 'no-store' })
+                    ]);
+                    if (catsResp.ok) cats = await catsResp.json().catch(() => []);
+                    if (menuResp.ok) items = await menuResp.json().catch(() => []);
+                } catch {}
+                // مسارات الأصول (Netlify) كبديل
+                if (!Array.isArray(cats) || !cats.length || !Array.isArray(items) || !items.length) {
+                    try {
+                        const [catsResp2, menuResp2] = await Promise.all([
+                            fetch('assets/categories.json', { cache: 'no-store' }),
+                            fetch('assets/menu.json', { cache: 'no-store' })
+                        ]);
+                        if (catsResp2.ok) cats = await catsResp2.json().catch(() => []);
+                        if (menuResp2.ok) items = await menuResp2.json().catch(() => []);
+                    } catch (e) {
+                        console.warn('تعذّر تحميل البيانات من الأصول، سيتم استخدام القيم الحالية.', e);
+                    }
+                }
+            
+                // بناء صور الفئات ديناميًا
+                categoryImages = {};
+                (Array.isArray(cats) ? cats : []).forEach(c => {
+                    if (!c || !c.name) return;
+                    categoryImages[c.name] = c.imageUrl || 'https://placehold.co/300x300/EEE/333?text=No+Image';
+                });
+                const catsFromFile = (Array.isArray(cats) ? cats.map(c => c && c.name).filter(n => !!n) : []);
+            
+                // تجميع الأصناف حسب الفئة لتتوافق مع شكل menuData
+                const grouped = {};
+                (Array.isArray(items) ? items : []).forEach(it => {
+                    const cat = (it.category || 'أخرى').trim();
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push({
+                        id: it.id,
+                        type: it.type || 'product',
+                        name: it.name,
+                        description: it.description || '',
+                        price: it.price,
+                        image: it.imageUrl || ''
+                    });
+                });
+                menuData = grouped;
+            
+                // دمج الفئات من المصدرين وضبط الفئة الحالية
+                const itemsCats = Object.keys(grouped);
+                categoriesList = Array.from(new Set([...(catsFromFile || []), ...itemsCats]));
+                if (!currentCategory) currentCategory = categoriesList[0] || Object.keys(menuData)[0] || '';
+                renderCategories();
+                if (currentCategory) renderMenuItems(currentCategory);
+            }
+            async function loadSettingsAndHero() {
+                try {
+                    const [sResp, hResp, aResp] = await Promise.all([
+                        fetch('/api/settings', { cache: 'no-store' }),
+                        fetch('/api/hero', { cache: 'no-store' }),
+                        fetch('/api/announcements', { cache: 'no-store' })
+                    ]);
+                    settings = sResp.ok ? await sResp.json().catch(() => ({})) : {};
+                    hero = hResp.ok ? await hResp.json().catch(() => ({})) : {};
+                    announcements = aResp.ok ? await aResp.json().catch(() => ({})) : {};
+                } catch (e) {
+                    settings = {};
+                    hero = {};
+                    announcements = {};
+                }
 
-        // إغلاق عبر مفتاح Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const overlay = document.getElementById('navbar-search-overlay');
-                if (overlay && !overlay.classList.contains('hidden')) {
-                    overlay.classList.add('hidden');
+                // بدائل من مجلد الأصول إذا كانت فارغة
+                const needSettings = !settings || Object.keys(settings).length === 0;
+                const needHero = !hero || Object.keys(hero).length === 0;
+                const needAnn = !announcements || Object.keys(announcements).length === 0;
+                if (needSettings || needHero || needAnn) {
+                    try {
+                        const [sResp2, hResp2, aResp2] = await Promise.all([
+                            needSettings ? fetch('assets/settings.json', { cache: 'no-store' }) : Promise.resolve({ ok: false }),
+                            needHero ? fetch('assets/hero.json', { cache: 'no-store' }) : Promise.resolve({ ok: false }),
+                            needAnn ? fetch('assets/announcements.json', { cache: 'no-store' }) : Promise.resolve({ ok: false })
+                        ]);
+                        if (sResp2.ok) settings = await sResp2.json().catch(() => settings || {});
+                        if (hResp2.ok) hero = await hResp2.json().catch(() => hero || {});
+                        if (aResp2.ok) announcements = await aResp2.json().catch(() => announcements || {});
+                    } catch (e) {
+                        console.warn('تعذّر تحميل إعدادات/هيرو/إعلانات من الأصول.', e);
+                    }
                 }
             }
-        });
-
-        // دالة لتوليد كود الـ HTML لبطاقة الوجبة
-        const createItemCard = (item, sectionId) => {
-            const isList = viewMode === 'list';
-
-            // دعم عنصر "عنوان H2" داخل الفئة
-            if ((item.type || 'item') === 'heading') {
-                const headingHtml = `<h2 class="text-2xl font-bold text-main mb-2 border-b-2 border-[#ea580c]/50 pb-1">${item.name}</h2>`;
-                if (isList) {
-                    return `<div class="heading-item">${headingHtml}</div>`;
-                } else {
-                    // في الشبكة، اجعل العنوان بعرض العمودين ليكون عنصر تقسيم بصري
-                    return `<div class="heading-item col-span-2">${headingHtml}</div>`;
-                }
-            }
-
-            const cardClasses = isList
-                ? 'flex items-center gap-3 cursor-pointer'
-                : 'col-span-1 flex flex-col h-full cursor-pointer';
-            const imageClasses = isList
-                ? 'w-24 h-24 object-cover rounded-xl flex-shrink-0'
-                : 'w-full h-28 object-cover rounded-t-xl';
-            const contentClasses = isList
-                ? 'p-2 flex-1 flex flex-col justify-center'
-                : 'p-2 pt-3 flex flex-col justify-between h-auto';
-
-            const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
-            const basePrice = Number(item.price);
-            const hasPrice = Number.isFinite(basePrice) && basePrice > 0;
-            const priceText = hasVariants
-                ? ''
-                : (hasPrice ? `${basePrice.toLocaleString('ar-IQ')} د.ع` : '');
-            const priceHtml = priceText ? `<span class=\"text-sm font-black text-[#ea580c]\">${priceText}</span>` : '';
-
-            const variantsRow = hasVariants
-                ? `<div class=\"flex flex-col gap-2 mt-2\">\n                        ${item.variants.map(v => `\n                            <div class=\"flex items-center gap-1\">\n                                <span class=\"px-2 py-1 bg-[#ea580c] text-white rounded-lg text-xs font-bold\">${v.label}${Number(v.price) > 0 ? ` — ${Number(v.price).toLocaleString('ar-IQ')} د.ع` : ''}</span>\n                                <button class=\"add-to-cart-btn add-circle-btn self-center\"\n                                        onclick=\"addItemToCart(${item.id}, '${String(v.key)}', this); event.stopPropagation();\" title=\"أضف\">\n                                    <i data-lucide=\"plus\" class=\"w-4 h-4\"></i>\n                                </button>\n                            </div>\n                        `).join('')}\n                   </div>`
-                : '';
-
-            if (isList) {
-                // نمط القائمة: السعر بجانب الاسم، الوصف تحتهم، مع أزرار الأحجام إن وجدت
-                return `
-                <div class="menu-item bg-white rounded-xl shadow-lg overflow-hidden transition duration-300 hover:shadow-[#ea580c]/30 ${cardClasses}" data-id="${item.id}" data-name="${item.name}" data-desc="${item.desc}">
-                    <div class="relative flex-shrink-0">
-                        <img src="${item.img || ''}" alt="${item.name}" class="${imageClasses}" onerror="this.style.display='none'" style="${item.img ? '' : 'display:none;'}" onclick="openImageLightbox('${item.img || ''}'); event.stopPropagation();">
-                    </div>
-                    <div class="${contentClasses}">
-                        <div class="flex items-baseline justify-between gap-2 mb-1">
-                            <h4 class="text-base font-extrabold text-main">${item.name}</h4>
-                            ${priceHtml}
-                        </div>
-                        <p class="text-xs text-gray-600 mb-2">${item.desc || ''}</p>
-                        ${hasVariants ? variantsRow : `
-                            <button class="add-to-cart-btn self-start px-3 py-1 bg-[#ea580c] hover:bg-[#ea580c] text-white rounded-lg text-xs font-bold"
-                                    onclick="addItemToCart(${item.id}, null, this); event.stopPropagation();">
-                                أضف للسلة
-                            </button>
-                        `}
-                    </div>
-                </div>`;
-            }
-
-            // نمط الشبكة: إذا لا توجد أحجام وكان هناك صورة، نعرض زر + فوق الصورة.
-            // إذا لا توجد صورة، نخفي زر الـ overlay ونضع زر + داخل المحتوى تحت.
-            const hasImage = Boolean(item.img);
-            const overlayHtml = (!hasVariants && hasImage) ? `
-                <div class="add-button-overlay cursor-pointer" onclick="addItemToCart(${item.id}, null, this); event.stopPropagation();">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                </div>` : '';
-
-            return `
-                <div class="menu-item bg-white rounded-xl shadow-lg overflow-hidden transition duration-300 hover:shadow-[#ea580c]/30 ${cardClasses}" data-id="${item.id}" data-name="${item.name}" data-desc="${item.desc}">
-                    <div class="relative">
-                        <img src="${item.img || ''}" alt="${item.name}" class="${imageClasses}" onerror="this.style.display='none'" style="${item.img ? '' : 'display:none;'}" onclick="openImageLightbox('${item.img || ''}'); event.stopPropagation();">
-                        ${overlayHtml}
-                    </div>
-                    <div class="${contentClasses}">
-                        <div>
-                            <h4 class="text-base font-extrabold text-main mb-1">${item.name}</h4>
-                            <p class="text-xs text-gray-500 mb-1">${item.desc || ''}</p>
-                        </div>
-                        ${hasVariants ? variantsRow : (!hasImage ? `
-                            <button class="add-to-cart-btn add-circle-btn self-start"
-                                    onclick="addItemToCart(${item.id}, null, this); event.stopPropagation();">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                            </button>
-                        ` : '')}
-                        <div class="mt-auto">
-                            ${priceHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
-        };
-
-        // جعل بطاقات العناصر قابلة للنقر لفتح معاينة المنتج
-         const wireItemCardClicks = () => {
-             const cards = document.querySelectorAll('.menu-item');
-             cards.forEach(card => {
-                 card.addEventListener('click', (e) => {
-                     // إذا تم النقر على زر الإضافة (+) أو زر "أضف للسلة"، لا نفتح المعاينة
-                     if (e.target.closest('.add-button-overlay') || e.target.closest('.add-to-cart-btn')) return;
-                     const idAttr = card.getAttribute('data-id');
-                     if (!idAttr) return;
-                     const id = Number(idAttr);
-                     openItemPreview(id);
+            // العرض الأولي
+            loadSettingsAndHero().finally(() => {
+                 applyHeroToPage();
+                 loadInitialData();
+                 renderCart(); // للعرض الأولي (سلة فارغة)
+                 // ربط زر إرسال الطلب وتحديث رابط الاتصال بعد تحميل الإعدادات
+                 if (submitOrderBtn) submitOrderBtn.addEventListener('click', submitOrder);
+                 updateCallLink();
+                 updateSocialLinks();
+                 updateCartItemsHeight();
+                 window.addEventListener('resize', updateCartItemsHeight);
                  });
              });
-         };
-
-         // فتح معاينة المنتج داخل المودال
-         const openItemPreview = (itemId) => {
-             const item = menuData.flatMap(section => section.items).find(i => i.id === itemId);
-             if (!item) return;
-             const overlay = document.getElementById('item-preview-overlay');
-             const modal = document.getElementById('item-preview-modal');
-             if (!overlay || !modal) return;
-             // تعبئة البيانات
-             const imgEl = document.getElementById('preview-img');
-             const nameEl = document.getElementById('preview-name');
-             const descEl = document.getElementById('preview-desc');
-             const priceEl = document.getElementById('preview-price');
-             const addBtn = document.getElementById('preview-add-btn');
-             const variantsContainer = document.getElementById('preview-variants');
-             const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
-
-             if (imgEl) { 
-                 const src = item.img || '';
-                 imgEl.style.display = src ? '' : 'none';
-                 imgEl.src = src; 
-                 imgEl.onclick = () => openImageLightbox(src); 
-             }
-             if (nameEl) nameEl.textContent = item.name;
-             if (descEl) descEl.textContent = item.desc || '';
-
-             // السعر: إخفاؤه عند عدم وجوده أو كونه 0
-             const basePrice = Number(item.price);
-             const hasPrice = Number.isFinite(basePrice) && basePrice > 0;
-             if (priceEl) priceEl.textContent = hasVariants
-                 ? ''
-                 : (hasPrice ? `${basePrice.toLocaleString('ar-IQ')} د.ع` : '');
-
-             // توليد أزرار الأحجام داخل المودال
-             if (variantsContainer) {
-                if (hasVariants) {
-                    variantsContainer.innerHTML = item.variants.map(v => (
-                         `<div class="flex items-center gap-1 mb-2">
-                            <span class="px-3 py-2 bg-[#ea580c] text-white rounded-lg text-xs font-bold">${v.label}${Number(v.price) > 0 ? ` — ${Number(v.price).toLocaleString('ar-IQ')} د.ع` : ''}</span>
-                            <button class="add-to-cart-btn add-circle-btn self-center"
-                                     onclick="addItemToCart(${item.id}, '${String(v.key)}', this); closeItemPreview();" title="أضف">
-                                 <i data-lucide="plus" class="w-4 h-4"></i>
-                             </button>
-                         </div>`
-                     )).join('');
-                } else {
-                    variantsContainer.innerHTML = '';
-                }
-            }
-
-             // زر الإضافة العام: أخفِه عند وجود أحجام
-             if (addBtn) addBtn.style.display = hasVariants ? 'none' : 'inline-block';
-
-             // حفظ المعرف لاستخدامه عند الإضافة للسلة
-             modal.setAttribute('data-current-id', String(itemId));
-             // إنشاء الأيقونات الجديدة داخل محتوى المودال
-             lucide.createIcons();
-             // إظهار المودال
-             overlay.classList.remove('hidden');
-             modal.classList.remove('hidden');
-             document.body.style.overflow = 'hidden';
-         };
-
-         // إغلاق معاينة المنتج
-         const closeItemPreview = () => {
-             const overlay = document.getElementById('item-preview-overlay');
-             const modal = document.getElementById('item-preview-modal');
-             if (!overlay || !modal) return;
-             overlay.classList.add('hidden');
-             modal.classList.add('hidden');
-             document.body.style.overflow = 'auto';
-         };
-
-         // ربط أزرار الإغلاق والإضافة داخل المودال
-         (function initPreviewModalBindings() {
-             const overlay = document.getElementById('item-preview-overlay');
-             const closeBtn = document.getElementById('preview-close-btn');
-             const addBtn = document.getElementById('preview-add-btn');
-             if (overlay) overlay.addEventListener('click', closeItemPreview);
-             if (closeBtn) closeBtn.addEventListener('click', closeItemPreview);
-             if (addBtn) addBtn.addEventListener('click', () => {
-                const modal = document.getElementById('item-preview-modal');
-                if (!modal) return;
-                const idAttr = modal.getAttribute('data-current-id');
-                if (!idAttr) return;
-                const id = Number(idAttr);
-                addItemToCart(id);
-                closeItemPreview();
-            });
-         })();
-
-         // معاينة الصورة (ليبت بوكس)
-         const openImageLightbox = (src) => {
-             const overlay = document.getElementById('image-lightbox-overlay');
-             const modal = document.getElementById('image-lightbox-modal');
-             const img = document.getElementById('lightbox-img');
-             if (!overlay || !modal || !img) return;
-             // إعادة إظهار الصورة إن كانت مخفية بفعل onerror سابقاً
-             if (src) {
-               img.style.display = '';
-             } else {
-               img.style.display = 'none';
-             }
-             img.src = src || '';
-             overlay.classList.remove('hidden');
-             modal.classList.remove('hidden');
-         };
-         const closeImageLightbox = () => {
-             const overlay = document.getElementById('image-lightbox-overlay');
-             const modal = document.getElementById('image-lightbox-modal');
-             if (!overlay || !modal) return;
-             overlay.classList.add('hidden');
-             modal.classList.add('hidden');
-         };
-         (function initImageLightboxBindings() {
-             const overlay = document.getElementById('image-lightbox-overlay');
-             const closeBtn = document.getElementById('image-lightbox-close');
-             if (overlay) overlay.addEventListener('click', closeImageLightbox);
-             if (closeBtn) closeBtn.addEventListener('click', closeImageLightbox);
-         })();
-
-        // دالة لتوليد كود الـ HTML للقائمة بالكامل (عرض جميع الأقسام)
-        const renderMenu = (data) => {
-            const menuContent = document.getElementById('menu-content');
-            
-            if (data.length === 0) {
-                menuContent.innerHTML = `
-                    <div class="text-center text-gray-500 py-20">
-            <i data-lucide="restaurant" class="w-16 h-16 mx-auto mb-4 text-[#ea580c]"></i>
-                        <p class="text-3xl font-bold mb-2">القائمة فارغة حالياً</p>
-                        <p class="text-lg">يرجى إضافة أقسام وأطباق لعرضها.</p>
-                    </div>
-                `;
-            } else {
-                const containerCls = viewMode === 'list' ? 'space-y-3' : 'grid grid-cols-2 gap-4';
-                menuContent.innerHTML = data.map(section => `
-                    <section id="${section.id}" class="section-silver mb-12 pt-4">
-            <h3 class="text-4xl font-extrabold text-main mb-6 border-b-4 border-[#ea580c]/50 pb-3 inline-block">${section.title}</h3>
-                        <div class="${containerCls}">
-                            ${section.items.map(item => createItemCard(item, section.id)).join('')}
-                        </div>
-                    </section>
-                `).join('');
-            }
-
-            // بعد توليد المحتوى، قم بإنشاء الأيقونات وإعداد المراقب
-            lucide.createIcons();
-            wireItemCardClicks();
-        };
-
-        // دالة لتوليد العرض لقسم واحد فقط (بدون تمرير)
-        const renderMenuForSection = (sectionId) => {
-            const menuContent = document.getElementById('menu-content');
-            const section = menuData.find(s => s.id === sectionId);
-
-            if (!section) {
-                menuContent.innerHTML = `
-                    <div class="text-center text-gray-500 py-20">
-            <i data-lucide="alert-octagon" class="w-16 h-16 mx-auto mb-4 text-[#ea580c]"></i>
-                        <p class="text-2xl font-bold mb-2">القسم غير موجود</p>
-                        <p class="text-lg">يرجى اختيار قسم آخر.</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            const containerCls = viewMode === 'list' ? 'space-y-3' : 'grid grid-cols-2 gap-4';
-            menuContent.innerHTML = `
-                <section id="${section.id}" class="section-silver mb-12 pt-4">
-            <h3 class="text-4xl font-extrabold text-main mb-6 border-b-4 border-[#ea580c]/50 pb-2 inline-block">${section.title}</h3>
-                    <div class="${containerCls}">
-                        ${(section.items || []).map(item => createItemCard(item, section.id)).join('')}
-                    </div>
-                </section>
-            `;
-
-            lucide.createIcons();
-            wireItemCardClicks();
-        };
-
-        // دالة لتوليد روابط الأقسام بصور أكبر والاسم أسفلها
-        const renderNav = (data) => {
-            const navList = document.getElementById('section-nav-list');
-            navList.innerHTML = data.map(section => {
-                const fallbackThumb = (section.items && section.items[0] && section.items[0].img) || '';
-                const thumb = (categoryImagesMap && categoryImagesMap[section.title]) || fallbackThumb;
-                return `
-                <li class="flex-shrink-0">
-                    <a href="#" class="nav-link category-card w-28 sm:w-32 md:w-36"
-                       onclick="renderMenuForSection('${section.id}'); document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active')); this.classList.add('active'); return false;"
-                       data-section-id="${section.id}" tabindex="0">
-                        <img src="${thumb || ''}" alt="${section.title}" onerror="this.style.display='none'" style="${thumb ? '' : 'display:none;'}">
-                        <div class="cat-overlay"></div>
-                        <span class="cat-title">${section.title}</span>
-                    </a>
-                </li>
-                `;
-            }).join('');
-            // تفعيل تأثيرات الظهور عند التمرير
-            initCategoryCardReveal();
-        };
-
-        // مراقب ظهور البطاقات عند التمرير لتحسين التجربة البصرية
-        const initCategoryCardReveal = () => {
-            const cards = document.querySelectorAll('#section-nav-list .category-card');
-            if (!cards.length) return;
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) {
-                        e.target.classList.add('reveal');
-                        observer.unobserve(e.target);
-                    }
-                });
-            }, { threshold: 0.15 });
-            cards.forEach(c => observer.observe(c));
-        };
-
-        // أزرار تبديل نمط العرض: تفعيل وربط النقر
-        const updateViewToggleActive = () => {
-            const btnGrid = document.getElementById('btn-grid-view');
-            const btnList = document.getElementById('btn-list-view');
-            if (!btnGrid || !btnList) return;
-            const setActive = (btn, active) => {
-                btn.classList.toggle('bg-[#ea580c]', active);
-                btn.classList.toggle('text-white', active);
-                btn.classList.toggle('border-[#ea580c]', active);
-                btn.classList.toggle('bg-transparent', !active);
-                btn.classList.toggle('text-main', !active);
-                btn.classList.toggle('border-gray-300', !active);
-            };
-            setActive(btnGrid, viewMode === 'grid');
-            setActive(btnList, viewMode === 'list');
-        };
-
-        const initViewToggle = () => {
-            updateViewToggleActive();
-            const btnGrid = document.getElementById('btn-grid-view');
-            const btnList = document.getElementById('btn-list-view');
-            const rerender = () => {
-                localStorage.setItem('view_mode', viewMode);
-                updateViewToggleActive();
-                const activeLink = document.querySelector('.nav-link.active');
-                const activeId = activeLink ? activeLink.getAttribute('data-section-id') : null;
-                if (activeId) {
-                    renderMenuForSection(activeId);
-                } else {
-                    renderMenu(menuData);
-                }
-            };
-            if (btnGrid) btnGrid.addEventListener('click', () => { viewMode = 'grid'; rerender(); });
-            if (btnList) btnList.addEventListener('click', () => { viewMode = 'list'; rerender(); });
-        };
-        
-        // ------------------ خاصية البحث ------------------
-        const filterItems = () => {
-            // قراءة قيمة البحث إن وُجدت أي من الحقول
-            const desktopEl = document.getElementById('search-input');
-            const mobileEl = document.getElementById('search-input-mobile');
-            const navbarEl = document.getElementById('search-input-navbar');
-            const raw = ((desktopEl ? desktopEl.value : '') || (mobileEl ? mobileEl.value : '') || (navbarEl ? navbarEl.value : '')).toLowerCase().trim();
-            const query = raw;
-            const allItems = document.querySelectorAll('.menu-item');
-            let resultsFound = false;
-
-            allItems.forEach(item => {
-                const name = (item.getAttribute('data-name') || '').toLowerCase();
-                const desc = (item.getAttribute('data-desc') || '').toLowerCase();
-                if (query === '' || name.includes(query) || desc.includes(query)) {
-                    // استخدم display مناسب حسب نمط العرض
-                    item.style.display = viewMode === 'list' ? 'flex' : '';
-                    resultsFound = true;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            // إظهار رسالة عدم وجود نتائج
-            const noRes = document.getElementById('no-results');
-            if (noRes) noRes.classList.toggle('hidden', resultsFound || query === '');
-
-            // إخفاء الأقسام التي لا تحتوي على نتائج مرئية
-            menuData.forEach(section => {
-                const sectionElement = document.getElementById(section.id);
-                if (sectionElement) {
-                    const visibleItems = Array.from(sectionElement.querySelectorAll('.menu-item')).filter(item => item.style.display !== 'none');
-                    sectionElement.style.display = (visibleItems.length > 0 || query === '') ? 'block' : 'none';
-                }
-            });
-        };
-        
-        // تم إلغاء تفعيل المراقب التلقائي لتفعيل الروابط عند التمرير
-        
-        // تم إزالة منطق الشريط الجانبي للقائمة لصالح شريط أفقي تحت البحث
-
-
-        // زر العودة للأعلى: إظهار/إخفاء وسلوك التمرير
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function handleScrollTopVisibility() {
-            const btn = document.getElementById('scroll-top-btn');
-            if (!btn) return;
-            const show = window.scrollY > 400;
-            btn.classList.toggle('hidden', !show);
-        }
-
-        window.addEventListener('scroll', handleScrollTopVisibility);
-
-        // تثبيت النافبار عند تجاوز ارتفاع الهيدر/الهيرو
-        function setupStickyNavbar() {
-            const navbar = document.getElementById('main-navbar');
-            const headerEl = document.querySelector('header');
-            const mainEl = document.querySelector('main');
-            if (!navbar || !headerEl || !mainEl) return;
-            const threshold = headerEl.offsetHeight - 8; // مسافة صغيرة للتشغيل السلس
-            const apply = () => {
-                const stuck = window.scrollY >= threshold;
-                navbar.classList.toggle('navbar-stuck', stuck);
-                navbar.classList.toggle('navbar-floating', !stuck);
-                // منع تغطية المحتوى عند التثبيت
-                if (stuck) {
-                    mainEl.style.paddingTop = navbar.offsetHeight + 'px';
-                } else {
-                    mainEl.style.paddingTop = '';
-                }
-            };
-            window.addEventListener('scroll', apply);
-            apply();
-        }
-
-        // ------------------ نقطة بدء التطبيق ------------------
-
-        async function applyHeroFromAssets() {
-            try {
-                const resp = await fetch('assets/hero.json', { cache: 'no-store' });
-                if (!resp.ok) return;
-                const data = await resp.json();
-                const imgEl = document.getElementById('hero-image');
-                const vidEl = document.getElementById('hero-video');
-                const titleEl = document.getElementById('hero-title');
-                const overlayEl = document.getElementById('hero-overlay');
-                const type = String(data.mediaType || '').toLowerCase();
-                const useVideo = type === 'video' && data.videoUrl;
-                if (useVideo && vidEl) {
-                    vidEl.src = data.videoUrl;
-                    vidEl.style.display = '';
-                    if (imgEl) imgEl.style.display = 'none';
-                } else {
-                    if (imgEl && data.imageUrl) { imgEl.src = data.imageUrl; imgEl.style.display = ''; }
-                    if (vidEl) { vidEl.removeAttribute('src'); vidEl.style.display = 'none'; }
-                }
-                if (titleEl && typeof data.title === 'string') titleEl.textContent = data.title;
-                if (overlayEl) {
-                    const op = Number(data.overlayOpacity);
-                    const opacity = Number.isFinite(op) ? Math.min(Math.max(op, 0), 1) : 0.35;
-                    overlayEl.style.backgroundColor = `rgba(0,0,0,${opacity})`;
-                }
-            } catch (e) {
-                // تجاهل أي أخطاء بتحميل الهيرو للحفاظ على القيم الافتراضية
-                console.warn('تعذّر تحميل hero.json', e);
-            }
-        }
-
-        window.onload = async () => {
-            // تطبيق الهيرو من ملف الأصول إن وجد
-            await applyHeroFromAssets();
-            // تحميل البيانات من التخزين المحلي أو الأصول ثم بناء الأقسام
-            const items = await loadMenuItemsFromAssetsOrStorage();
-            menuData = buildSections(items);
-
-            // سنجمع صور الفئات من الأصول هنا لدمجها لاحقاً مع المخزّن محلياً
-            let catImagesFromAssets = {};
-
-            // دمج فئات الأصول مع المخزّن المحلي، ودعم صيغة الكائنات {name, imageUrl}
-            try {
-                // قراءة الفئات من التخزين المحلي
-                let localCategoriesRaw = [];
-                const rawCatsList = localStorage.getItem('menu_categories');
-                if (rawCatsList) {
-                    try {
-                        const parsedCats = JSON.parse(rawCatsList);
-                        if (Array.isArray(parsedCats)) localCategoriesRaw = parsedCats;
-                    } catch {}
-                }
-
-                // قراءة الفئات من ملف الأصول دائماً للدمج
-                let assetsCatsRaw = [];
-                try {
-                    const respCats = await fetch('assets/categories.json', { cache: 'no-store' });
-                    if (respCats.ok) {
-                        const catsData = await respCats.json();
-                        if (Array.isArray(catsData)) assetsCatsRaw = catsData;
-                    }
-                } catch {}
-
-                // تجميع الأسماء ودمج الصور من الأصول عند توفرها
-                const categorySet = new Set();
-                const addCat = (cat) => {
-                    if (typeof cat === 'string') {
-                        const name = cat.trim();
-                        if (name) categorySet.add(name);
-                    } else if (cat && typeof cat === 'object') {
-                        const name = (cat.name || '').trim();
-                        if (name) {
-                            categorySet.add(name);
-                            if (cat.imageUrl) catImagesFromAssets[name] = cat.imageUrl;
-                        }
-                    }
-                };
-                localCategoriesRaw.forEach(addCat);
-                assetsCatsRaw.forEach(addCat);
-                const categoryNames = Array.from(categorySet);
-
-                if (categoryNames.length) {
-                    const existingTitles = new Set(menuData.map(s => s.title));
-                    categoryNames.forEach(name => {
-                        if (!existingTitles.has(name)) {
-                            menuData.push({ id: name.toLowerCase().replace(/\s+/g, '-'), title: name, items: [] });
-                        }
-                    });
-                    // تحديث المخزن المحلي ليعكس الدمج
-                    try { localStorage.setItem('menu_categories', JSON.stringify(categoryNames)); } catch {}
-                }
-            } catch {}
-
-            // تحميل صور الفئات من التخزين المحلي إن وجدت ثم دمج صور الأصول عند غيابها محلياً
-            try {
-                const rawCats = localStorage.getItem(CATS_IMAGES_KEY);
-                if (rawCats) {
-                    categoryImagesMap = JSON.parse(rawCats) || {};
-                }
-            } catch {}
-            // دمج صور الأصول دون الكتابة على الصور المحفوظة محلياً
-            try {
-                Object.entries(catImagesFromAssets).forEach(([name, url]) => {
-                    if (url && !categoryImagesMap[name]) categoryImagesMap[name] = url;
-                });
-            } catch {}
-
-            // 1. توليد روابط الأقسام بصور أكبر والاسم أسفلها
-            renderNav(menuData);
-            initViewToggle();
-            // تعيين الفئة الافتراضية “الفطور الصباحي” كنشطة إن وجدت
-            document.querySelectorAll('#section-nav-list .nav-link').forEach(l => l.classList.remove('active'));
-            const DEFAULT_SECTION_TITLE = 'الفطور الصباحي';
-            const defaultSection = menuData.find(s => s.title === DEFAULT_SECTION_TITLE);
-            if (defaultSection) {
-                const defLink = document.querySelector(`.nav-link[data-section-id="${defaultSection.id}"]`);
-                if (defLink) defLink.classList.add('active');
-            } else {
-                const firstNavLink = document.querySelector('#section-nav-list .nav-link');
-                if (firstNavLink) firstNavLink.classList.add('active');
-            }
-
-            // 2. تحميل السلة وتحديث العرض
-            loadCart();
-            updateCartDisplay();
-            // تفعيل أيقونات Lucide للعناصر الثابتة
-            if (window.lucide && typeof lucide.createIcons === 'function') {
-                lucide.createIcons();
-            }
-            // ضبط حالة ظهور زر العودة للأعلى عند بدء الصفحة
-            handleScrollTopVisibility();
-            // تحميل ملاحظة الزبون من التخزين المحلي وربط الحفظ الفوري
-            const noteEl = document.getElementById('customer-note');
-            if (noteEl) {
-                const savedNote = localStorage.getItem('restaurant_menu_cart_note');
-                if (savedNote) noteEl.value = savedNote;
-                noteEl.addEventListener('input', () => {
-                    localStorage.setItem('restaurant_menu_cart_note', noteEl.value);
-                });
-            }
-
-            // ربط حقول معلومات الزبون مع التخزين المحلي
-            const nameEl = document.getElementById('customer-name');
-            const phoneEl = document.getElementById('customer-phone');
-            const purchaseTypeEl = document.getElementById('purchase-type');
-            const orderTypeEl = document.getElementById('order-type');
-            const areaEl = document.getElementById('customer-area');
-            const addressEl = document.getElementById('delivery-address');
-            const addressWrapper = document.getElementById('delivery-address-wrapper');
-            const areaWrapper = document.getElementById('customer-area-wrapper');
-
-            // تحميل المحافظات وتوليدها في القائمة مع أجور الشحن
-            if (areaEl) {
-                const areaWrapper = document.getElementById('customer-area-wrapper');
-                if (!isGovsEnabled()) {
-                    if (areaWrapper) areaWrapper.style.display = 'none';
-                } else {
-                    await loadGovernorates();
-                    const areaOptions = ['<option value="">اختر المحافظة</option>'].concat(
-                        governorates.map(g => `<option value="${g.name}">${g.name}</option>`)
-                    ).join('');
-                    areaEl.innerHTML = areaOptions;
-                }
-            }
-
-            const savedInfoRaw = localStorage.getItem('restaurant_customer_info');
-            let savedInfo = {};
-            if (savedInfoRaw) {
-                try { savedInfo = JSON.parse(savedInfoRaw) || {}; } catch { savedInfo = {}; }
-            }
-            if (nameEl) nameEl.value = savedInfo.name || '';
-            if (phoneEl) phoneEl.value = savedInfo.phone || '';
-            if (purchaseTypeEl) purchaseTypeEl.value = savedInfo.purchaseType || 'نقد';
-            if (orderTypeEl) orderTypeEl.value = savedInfo.orderType || 'إرسال إلى العنوان';
-            if (areaEl) {
-                areaEl.value = savedInfo.area || '';
-                updateGovernorateFeeDisplay(areaEl.value);
-            }
-            if (addressEl) addressEl.value = savedInfo.address || '';
-
-            const persistInfo = () => {
-                const info = {
-                    name: nameEl ? nameEl.value : '',
-                    phone: phoneEl ? phoneEl.value : '',
-                    purchaseType: purchaseTypeEl ? purchaseTypeEl.value : 'نقد',
-                    orderType: orderTypeEl ? orderTypeEl.value : 'إرسال إلى العنوان',
-                    area: areaEl ? areaEl.value : '',
-                    address: addressEl ? addressEl.value : ''
-                };
-                localStorage.setItem('restaurant_customer_info', JSON.stringify(info));
-            };
-            if (nameEl) nameEl.addEventListener('input', persistInfo);
-            if (phoneEl) phoneEl.addEventListener('input', persistInfo);
-            if (purchaseTypeEl) purchaseTypeEl.addEventListener('change', persistInfo);
-            if (orderTypeEl) orderTypeEl.addEventListener('change', () => { persistInfo(); updateGovernorateFeeDisplay(areaEl ? areaEl.value : ''); updateCartDisplay(); });
-            if (areaEl) areaEl.addEventListener('change', () => { persistInfo(); updateGovernorateFeeDisplay(areaEl.value); updateCartDisplay(); });
-            if (addressEl) addressEl.addEventListener('input', persistInfo);
-
-            // إظهار العنوان دائمًا وتعطيل المحافظة
-            const toggleAddressVisibility = () => {
-                if (addressWrapper) addressWrapper.style.display = 'block';
-                if (areaWrapper) areaWrapper.style.display = isGovsEnabled() ? 'block' : 'none';
-            };
-            toggleAddressVisibility();
-            updateGovernorateFeeDisplay(areaEl ? areaEl.value : '');
-            
-            // 3. التأكد من عمل الأيقونات في الأماكن الثابتة
-            lucide.createIcons();
-            
-            // 4. عرض قسم افتراضي مباشرة بدون تمرير إن وجد
-            if (defaultSection) {
-                renderMenuForSection(defaultSection.id);
-            } else {
-                // عرض جميع الأقسام مباشرة عند فتح المنيو
-                renderMenu(menuData);
-            }
-
-            // تفعيل سلوك النافبار اللاصق
-            setupStickyNavbar();
-        };
-
-        // بناء نص الطلب لإرساله عبر واتساب (تنسيق الفاتورة)
-        function buildOrderMessage() {
-            const savedInfoRaw = localStorage.getItem('restaurant_customer_info');
-            let info = {};
-            try { info = JSON.parse(savedInfoRaw || '{}') || {}; } catch {}
-            const note = localStorage.getItem('restaurant_menu_cart_note') || '';
-
-            const name = info.name || '';
-            const phone = info.phone || '';
-            const purchaseType = info.purchaseType || 'نقد';
-            const orderType = info.orderType || 'إرسال إلى العنوان';
-            const area = info.area || '';
-            const address = info.address || '';
-
-            // قراءة اسم الفرع من الهيدر لعرضه أعلى الفاتورة
-            const headerBranchEl = document.getElementById('branch-name') || document.querySelector('header .text-xs.text-gray-600');
-            const branchNameRaw = headerBranchEl ? headerBranchEl.textContent.trim() : '';
-            const branchValue = branchNameRaw.replace(/^فرع\s*/, '').trim();
-
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            let shippingFee = 0;
-            const isDelivery = (orderType || 'إرسال إلى العنوان') === 'إرسال إلى العنوان';
-            if (isDelivery && isGovsEnabled()) shippingFee = governoratesMap[area] || 0;
-            const finalTotal = subtotal + shippingFee;
-
-            // رقم الطلب المتغير يُستخدم داخليًا فقط (لا يُعرض في الرسالة)
-            const orderNumber = (() => {
-                const current = Number(localStorage.getItem('restaurant_order_number'));
-                if (Number.isFinite(current) && current > 0) {
-                    const next = current + 1;
-                    localStorage.setItem('restaurant_order_number', String(next));
-                    return next;
-                } else {
-                    const base = Number(new Date().getTime().toString().slice(-6));
-                    localStorage.setItem('restaurant_order_number', String(base));
-                    return base;
-                }
-            })();
-
-            // الأصناف: اسم الطبق مع الكمية والسعر (إجمالي السطر)
-            const itemsLines = cart.map(item => `- *${item.name}* x ${item.quantity} — *${(item.price * item.quantity).toLocaleString('ar-IQ')} د.ع*`).join('\n');
-
-            const lines = [
-                '*فاتورة الطلب*',
-                '',
-                '*الأصناف:*',
-                itemsLines || '—',
-                '',
-                `*المجموع:* *${finalTotal.toLocaleString('ar-IQ')} د.ع*`,
-                '',
-                `*الاسم:* *${name}*`,
-                `*الرقم:* *${phone}*`,
-                area ? `*المحافظة:* *${area}*` : '',
-                address ? `*العنوان:* *${address}*` : ''
-            ].filter(Boolean);
-
-            return lines.join('\n');
-        }
-
-        function sendOrderViaWhatsApp() {
-            // منع الإرسال إن كانت السلة فارغة
-            if (!Array.isArray(cart) || cart.length === 0) {
-                alert('السلة فارغة. يرجى إضافة صنف قبل الإرسال عبر واتساب.');
-                return;
-            }
-
-            // التحقق من الحقول الإجبارية
-            let info = {};
-            try {
-                info = JSON.parse(localStorage.getItem('restaurant_customer_info') || '{}') || {};
-            } catch {
-                info = {};
-            }
-            const missing = [];
-            const isDelivery = true;
-
-            if (!info.name) missing.push('الاسم');
-            if (!info.phone) missing.push('الرقم');
-
-            if (missing.length > 0) {
-                alert('الحقول الإجبارية ناقصة:\n- ' + missing.join('\n- '));
-                const idsMap = { 'الاسم': 'customer-name', 'الرقم': 'customer-phone' };
-                const firstId = idsMap[missing[0]];
-                const el = firstId ? document.getElementById(firstId) : null;
-                if (el && typeof el.focus === 'function') el.focus();
-                return;
-            }
-
-            const msg = buildOrderMessage();
-const rawWa = (window.BRANCH_CONFIG && window.BRANCH_CONFIG.whatsapp) || (localStorage.getItem('restaurant_whatsapp_number') || '9647734587101');
-            const normalizeWhatsAppNumber = (raw) => {
-                const digits = String(raw || '').replace(/\D/g, '');
-                if (!digits) return '';
-                if (digits.startsWith('964')) return digits.replace(/^9640/, '964');
-                if (digits.startsWith('0')) return '964' + digits.slice(1);
-                return digits;
-            };
-            const waNum = normalizeWhatsAppNumber(rawWa);
-            const url = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
-
-            // افتح واتساب فوراً بطريقة متوافقة مع المتصفحات
-            try {
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.rel = 'noopener';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } catch (e) {
-                window.open(url, '_blank');
-            }
-
-            // بعد فتح واتساب، أرسل بيانات الزبون بشكل غير حاجز
-            try {
-                // استخرج معلومات إضافية اختيارية للسجل
-                const params = new URLSearchParams(window.location.search);
-                const branchKey = params.get('branch') || 'najaf';
-                const headerBranchEl = document.getElementById('branch-name');
-                const branchName = headerBranchEl ? headerBranchEl.textContent.trim() : '';
-                const orderNumber = Number(localStorage.getItem('restaurant_order_number'));
-
-                // احسب الإجمالي وعدد العناصر من السلة
-                const itemCount = Array.isArray(cart) ? cart.reduce((sum, it) => sum + (Number(it.quantity)||0), 0) : 0;
-                const subtotalPrice = Array.isArray(cart) ? cart.reduce((sum, it) => sum + ((Number(it.price)||0) * (Number(it.quantity)||0)), 0) : 0;
-
-                const payloadObj = {
-                    name: String(info.name || ''),
-                    phone: String(info.phone || ''),
-                    branch: branchKey,
-                    branchName: branchName,
-                    orderNumber: Number.isFinite(orderNumber) ? orderNumber : null,
-                    total: subtotalPrice,
-                    itemCount: itemCount,
-                    timestamp: new Date().toISOString()
-                };
-                const payload = JSON.stringify(payloadObj);
-                const blob = new Blob([payload], { type: 'application/json' });
-
-                // إذا تم ضبط رابط Google Apps Script، أرسل عبر مسارات متعددة لزيادة الاعتمادية
-                const hook = window.GS_WEBHOOK_URL || '';
-                let queued = false;
-                if (hook) {
-                    // 1) إرسال غير حاجز عبر sendBeacon
-                    queued = navigator.sendBeacon(hook, blob);
-
-                    // 2) إرسال إضافي عبر fetch بدون CORS (لا يقرأ الرد)
-                    try {
-                        fetch(hook, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: payload,
-                            mode: 'no-cors',
-                            keepalive: true
-                        }).catch(() => {});
-                    } catch {}
-
-                    // 3) إرسال عبر السيرفر المحلي ليحوّل الطلب إلى Google (يتجنب CORS تماماً)
-                    try {
-                        fetch('/api/forward-webhook', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ url: hook, data: payloadObj }),
-                            keepalive: true
-                        }).catch(() => {});
-                    } catch {}
-                }
-
-                // 4) النسخ الاحتياطي المحلي دائماً لضمان عدم فقدان السجل
-                fetch('/api/log-customer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: payload,
-                    keepalive: true
-                }).catch(() => {});
-            } catch (e) {
-                // لا نعرقل تجربة المستخدم بسبب أخطاء التسجيل
-                console.warn('فشل تسجيل بيانات الزبون بشكل غير حاجز', e);
-            }
-        }
-
-        function orderViaCall() {
-            // يمكن ضبط رقم المطعم لاحقاً عبر التخزين المحلي: restaurant_phone_number
-            const number = localStorage.getItem('restaurant_phone_number') || (window.BRANCH_CONFIG && window.BRANCH_CONFIG.phone) || '96407716664847';
-
-            // إرسال مخفي إلى Google Sheet قبل فتح الاتصال
-            try {
-                let info = {};
-                try { info = JSON.parse(localStorage.getItem('restaurant_customer_info') || '{}') || {}; } catch { info = {}; }
-                const params = new URLSearchParams(window.location.search);
-                const branchKey = params.get('branch') || 'najaf';
-                const headerBranchEl = document.getElementById('branch-name');
-                const branchName = headerBranchEl ? headerBranchEl.textContent.trim() : '';
-                const orderNumber = Number(localStorage.getItem('restaurant_order_number'));
-                const itemCount = Array.isArray(cart) ? cart.reduce((sum, it) => sum + (Number(it.quantity)||0), 0) : 0;
-                const subtotalPrice = Array.isArray(cart) ? cart.reduce((sum, it) => sum + ((Number(it.price)||0) * (Number(it.quantity)||0)), 0) : 0;
-                const payloadObj = {
-                    name: String(info.name || ''),
-                    phone: String(info.phone || ''),
-                    branch: branchKey,
-                    branchName: branchName,
-                    orderNumber: Number.isFinite(orderNumber) ? orderNumber : null,
-                    total: subtotalPrice,
-                    itemCount: itemCount,
-                    timestamp: new Date().toISOString(),
-                    method: 'call'
-                };
-                const payload = JSON.stringify(payloadObj);
-                const blob = new Blob([payload], { type: 'application/json' });
-                const hook = window.GS_WEBHOOK_URL || '';
-                if (hook) {
-                    navigator.sendBeacon(hook, blob);
-                    try { fetch(hook, { method: 'POST', body: payload, mode: 'no-cors', keepalive: true }).catch(() => {}); } catch {}
-                    try { fetch('/api/forward-webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: hook, data: payloadObj }), keepalive: true }).catch(() => {}); } catch {}
-                }
-                fetch('/api/log-customer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
-            } catch {}
-
-            // بعد ترتيب الإرسال غير الحاجز، افتح الاتصال
-            setTimeout(() => { window.location.href = `tel:${number}`; }, 60);
-        }
-
     </script>
-  <!-- سلوك شاشة البدء: إخفاء خلال ≤ 3 ثوانٍ مع إمكانية التخطي -->
-  <script>
-    (function() {
-      var splash = document.getElementById('splash-screen');
-      if (!splash) return;
-      var removed = false;
-      function hide() {
-        if (removed) return;
-        removed = true;
-        try {
-          splash.style.opacity = '0';
-          setTimeout(function() {
-            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-          }, 350);
-        } catch (e) {}
-      }
-      var MAX_DELAY = 3000; // الحد الأقصى للعرض
-      var MIN_DELAY_AFTER_LOAD = 1800; // تأخير قصير بعد اكتمال التحميل
-      window.addEventListener('load', function() { setTimeout(hide, MIN_DELAY_AFTER_LOAD); }, { once: true });
-      // ضمان عدم تجاوز 3 ثوانٍ
-      setTimeout(hide, MAX_DELAY);
-      // إمكانية التخطي بالنقر أو بلوحة المفاتيح
-      splash.addEventListener('click', hide, { once: true });
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space') hide();
-      });
-    })();
-  </script>
-
-  <!-- ضبط الحشو السفلي ليعادل ارتفاع الفوتر تلقائيًا -->
-  <script>
-    (function() {
-      function adjustBottomPadding() {
-        var mainEl = document.querySelector('main');
-        var footerEl = document.getElementById('iqr-footer');
-        if (!mainEl || !footerEl) return;
-        var h = footerEl.offsetHeight || 0;
-        mainEl.style.paddingBottom = h + 'px';
-      }
-      window.addEventListener('load', adjustBottomPadding, { once: true });
-      window.addEventListener('resize', adjustBottomPadding);
-    })();
-  </script>
-
-  <!-- فوتر ثابت: تم صنعها بواسطة İQR MENU (رابط أخضر) -->
-  <footer id="iqr-footer" class="fixed bottom-0 left-0 right-0 z-40 py-1 text-center text-xs text-gray-700 bg-white/95 backdrop-blur border-t border-gray-200">
-    <span>تم صنعها بواسطة | </span>
-    <a href="https://iqrarabic.com/" class="font-bold text-orange-600 hover:text-orange-700" target="_blank" rel="noopener">İQR MENU</a>
-  </footer>
-
+    <!-- زر السهم للأعلى: يظهر عند التمرير ويعيدك لبداية الأقسام -->
+    <button id="scroll-up-btn" aria-label="العودة إلى الأقسام" class="hidden fixed bottom-20 right-4 z-[200] w-11 h-11 rounded-full bg-red-600/60 text-white shadow-lg hover:bg-red-600/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-400/50 flex items-center justify-center">
+        <span class="sr-only">إلى الأقسام</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75 12 8.25l7.5 7.5" /></svg>
+    </button>
 </body>
 </html>
+
+
+
+

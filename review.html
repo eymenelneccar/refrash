@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قيمنا</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo','Inter',sans-serif; }
+  </style>
+</head>
+<body class="bg-white min-h-screen">
+  <div class="mx-auto max-w-lg p-4">
+    <header class="flex items-center justify-between py-3 border-b">
+      <h1 class="text-2xl font-bold text-[#331A12]">قيّم تجربتك</h1>
+      <a href="index.html" class="text-sm text-[#331A12] underline">العودة</a>
+    </header>
+
+    <main class="mt-6 space-y-5">
+      <form id="reviewForm" class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">الاسم</label>
+          <input id="rev-name" type="text" class="w-full border rounded-lg px-3 py-2" placeholder="اسمك" required>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">الرقم</label>
+          <input id="rev-phone" type="tel" class="w-full border rounded-lg px-3 py-2" placeholder="05xxxxxxxx" required>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">النجوم</label>
+          <div id="stars" class="flex items-center gap-2 select-none"></div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">ملاحظة</label>
+          <textarea id="rev-note" rows="4" class="w-full border rounded-lg px-3 py-2" placeholder="اكتب ملاحظتك"></textarea>
+        </div>
+        <button id="rev-submit" type="submit" class="w-full bg-[#E53935] text-white py-3 rounded-lg font-bold text-lg">إرسال</button>
+      </form>
+
+      <div id="rev-status" class="text-center text-sm text-gray-600"></div>
+    </main>
+  </div>
+
+  <script>
+    let settings = {};
+    const SHEETS_ENDPOINT_DEFAULT = '';
+    function getSheetsEndpoint() {
+      try { return (settings && settings.sheetsWebhookUrl) || SHEETS_ENDPOINT_DEFAULT; } catch { return SHEETS_ENDPOINT_DEFAULT; }
+    }
+    function sendReviewSilent(payload) {
+      const url = getSheetsEndpoint();
+      if (!url) return;
+      const data = JSON.stringify(payload || {});
+      try {
+        if (typeof navigator.sendBeacon === 'function') {
+          const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+          navigator.sendBeacon(url, blob);
+          return;
+        }
+      } catch {}
+      try {
+        fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: data, keepalive: true }).catch(() => {});
+      } catch {}
+    }
+
+    function starSvg(active) {
+      const fill = active ? '#EAB308' : '#D1D5DB';
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}" class="w-8 h-8"><path d="M11.48 3.499a.75.75 0 0 1 1.04 0l2.41 2.41a.75.75 0 0 0 .42.21l3.41.49a.75.75 0 0 1 .41 1.28l-2.46 2.4a.75.75 0 0 0-.22.66l.58 3.38a.75.75 0 0 1-1.09.79l-3.04-1.6a.75.75 0 0 0-.7 0l-3.04 1.6a.75.75 0 0 1-1.09-.79l.58-3.38a.75.75 0 0 0-.22-.66L5.24 8.389a.75.75 0 0 1 .41-1.28l3.41-.49a.75.75 0 0 0 .42-.21l2.41-2.41Z"/></svg>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const sResp = await fetch('/api/settings', { cache: 'no-store' }).catch(() => null);
+      settings = sResp && sResp.ok ? await sResp.json().catch(() => ({})) : {};
+      if (!settings || Object.keys(settings).length === 0) {
+        const sResp2 = await fetch('assets/settings.json', { cache: 'no-store' }).catch(() => null);
+        if (sResp2 && sResp2.ok) settings = await sResp2.json().catch(() => ({}));
+      }
+
+      let starsValue = 0;
+      const starsEl = document.getElementById('stars');
+      const updateStars = v => {
+        starsEl.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.innerHTML = starSvg(i <= v);
+          b.className = 'touch-manipulation';
+          b.addEventListener('click', () => { starsValue = i; updateStars(starsValue); });
+          starsEl.appendChild(b);
+        }
+      };
+      updateStars(starsValue);
+
+      const form = document.getElementById('reviewForm');
+      const statusEl = document.getElementById('rev-status');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('rev-name').value.trim();
+        const phone = document.getElementById('rev-phone').value.trim();
+        const note = document.getElementById('rev-note').value.trim();
+        if (!name || !phone || !starsValue) {
+          statusEl.textContent = 'يرجى إدخال الاسم والرقم وتحديد النجوم.';
+          statusEl.className = 'text-center text-sm text-red-600';
+          return;
+        }
+        const payload = { kind: 'review', name, phone, stars: starsValue, note, timestamp: new Date().toISOString() };
+        sendReviewSilent(payload);
+        statusEl.textContent = 'تم إرسال تقييمك، شكراً لك!';
+        statusEl.className = 'text-center text-sm text-green-600';
+        form.reset();
+        starsValue = 0;
+        updateStars(starsValue);
+      });
+    });
+  </script>
+</body>
+</html>

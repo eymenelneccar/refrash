@@ -52,54 +52,6 @@
   <main class="container">
     <h1 class="text-2xl font-extrabold mb-3">الإعدادات</h1>
     <div class="card section">
-      <h2 class="section-title">الألوان</h2>
-      <div class="grid-2">
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">اللون الأساسي</label>
-          <input type="color" id="primaryColorPicker" class="w-20 h-10 p-0 border rounded" value="#5A3920" />
-          <div class="help">يتم تطبيق اللون فورًا.</div>
-        </div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E5DED4" />
-
-      <h2 class="section-title">الثيمات الجاهزة</h2>
-      <div id="themesGrid" class="themes-grid"></div>
-
-      <hr style="border:none; border-top:1px solid #E5DED4" />
-
-      <h2 class="section-title">دائرة الألوان</h2>
-      <div class="wheel-wrap">
-        <div>
-          <canvas id="colorWheel" width="220" height="220" style="border:1px solid #E5DED4; border-radius:9999px; display:block"></canvas>
-        </div>
-        <div class="grid-2">
-          <div>
-            <label class="block text-sm text-gray-700 mb-1">درجة اللون</label>
-            <input id="hueSlider" type="range" min="0" max="360" step="1" class="w-full" />
-          </div>
-          <div>
-            <label class="block text-sm text-gray-700 mb-1">الشفافية</label>
-            <input id="alphaSlider" type="range" min="0" max="100" step="1" class="w-full" />
-          </div>
-          <div>
-            <label class="block text-sm text-gray-700 mb-1">HEX</label>
-            <div class="code-row"><input id="hexCode" class="code" readonly /><button id="copyHex" class="btn btn-outline btn-sm">نسخ</button></div>
-          </div>
-          <div>
-            <label class="block text-sm text-gray-700 mb-1">RGB</label>
-            <div class="code-row"><input id="rgbCode" class="code" readonly /><button id="copyRgb" class="btn btn-outline btn-sm">نسخ</button></div>
-          </div>
-          <div class="col-span-2">
-            <div id="wheelPreview" class="preview-box"></div>
-          </div>
-          <div class="col-span-2 actions">
-            <button id="applyWheelColor" class="btn btn-primary">تطبيق كـ لون أساسي</button>
-          </div>
-        </div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E5DED4" />
 
       <h2 class="section-title">الهوية</h2>
       <div class="grid-2">

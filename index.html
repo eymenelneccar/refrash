@@ -98,7 +98,7 @@
                     <img src="shopping-bag.png" alt="أيقونة السلة" class="w-8 h-8 object-contain" loading="eager" />
                     <span id="cart-count-bubble" class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5 hidden">0</span>
                 </button>
-                <a href="review.html" class="px-3 py-2 rounded-lg border border-accent text-accent font-bold hover:bg-accent/10 transition-colors">قيمنا</a>
+                <a href="review.html" class="px-3 py-2 rounded-lg border border-orange-600 text-orange-600 font-bold hover:bg-orange-50 transition-colors">قيمنا</a>
             </div>
         </header>
 
@@ -140,7 +140,7 @@
             </div>
             <div class="border-t border-coffee/10 text-center text-[11px] text-coffee/60 px-2 py-1">
               تم صنعها بواسطة |
-              <a href="https://iqrarabic.com/" target="_blank" rel="noopener" class="font-semibold text-red-600/70 hover:text-red-700/80 hover:underline">İQR MENU</a>
+              <a href="https://iqrarabic.com/" target="_blank" rel="noopener" class="font-semibold text-green-700/80 hover:text-green-800/90 hover:underline">İQR MENU</a>
             </div>
             <!-- قائمة المزيد المنبثقة -->
             <div id="more-menu" class="hidden fixed bottom-16 left-0 right-0 max-w-lg mx-auto px-3 z-20">
@@ -213,7 +213,7 @@
                     <p id="item-preview-description" class="text-sm text-coffee/80"></p>
                     <div class="flex justify-between items-center mt-2">
                         <span id="item-preview-price" class="text-lg font-bold text-coffee"></span>
-                        <button id="item-preview-add" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">أضف للسلة</button>
+                        <button id="item-preview-add" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">أضف للسلة</button>
                     </div>
                 </div>
             </div>
@@ -387,7 +387,7 @@
                         </svg>
                         <span>الخريطة</span>
                     </button>
-                    <button id="btn-menu" aria-label="فتح المنيو" class="w-16 h-16 -mt-7 rounded-full bg-accent text-white shadow-xl ring-4 ring-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
+                    <button id="btn-menu" aria-label="فتح المنيو" class="w-16 h-16 -mt-7 rounded-full bg-orange-500 text-white shadow-xl ring-4 ring-orange-300/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
                         <img src="fast-food.png" alt="منيو" class="w-10 h-10 object-contain filter brightness-0 invert" loading="eager" />
                     </button>
                     <button id="btn-more" class="flex flex-col items-center text-xs text-coffee/80">
@@ -461,7 +461,7 @@
                             <p class="text-sm lg:text-base text-coffee/80 mt-1 break-words flex-1 line-clamp-2">${item.description}</p>
                             <div class="flex justify-between items-center mt-4">
                                 <span class="font-bold text-md lg:text-lg text-coffee whitespace-nowrap">${item.price} د.ع</span>
-                                <button class="add-to-cart-btn bg-red-600 text-white w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full hover:bg-red-700 transition-colors flex-shrink-0 touch-manipulation" aria-label="أضف ${item.name} إلى السلة">
+                                <button class="add-to-cart-btn bg-orange-500 text-white w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full hover:bg-orange-600 transition-colors flex-shrink-0 touch-manipulation" aria-label="أضف ${item.name} إلى السلة">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
@@ -587,7 +587,8 @@
                 if (!enabled) { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } return; }
 
                 const images = Array.isArray(hero?.images) ? hero.images.filter(Boolean) : [];
-                const first = images[0] || img?.getAttribute('src') || 'https://placehold.co/600x400/331A12/FFCC80?text=أطباقنا+المميزة';
+                const single = (hero && typeof hero.imageUrl === 'string') ? hero.imageUrl : '';
+                const first = images[0] || single || img?.getAttribute('src') || 'https://placehold.co/600x400/331A12/FFCC80?text=أطباقنا+المميزة';
                 if (img) img.src = first;
 
                 if (titleTextEl) titleTextEl.textContent = (hero?.title || 'أهلاً بك في');
@@ -713,7 +714,7 @@
             }
 
             // إرسال مخفي وسريع إلى Google Sheets (عبر Web App)
-            const SHEETS_ENDPOINT_DEFAULT = '';
+            const SHEETS_ENDPOINT_DEFAULT = 'https://script.google.com/macros/s/AKfycbwb7zlwe1mI19ivolNcw0R6NaziPc2sBivH5oFEyi48lopwBvd407KucfSVvAm26re6/exec';
             function getSheetsEndpoint() {
                 try {
                     return (settings && settings.sheetsWebhookUrl) || SHEETS_ENDPOINT_DEFAULT;
@@ -803,13 +804,20 @@
                 // إرسال Google Sheets لاحقًا بصمت وبعد فتح الواتساب لضمان عدم التأثير
                 try {
                     const orderTotal = cart.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0);
+                    const itemsSig = cart.map(it => `${it.id}:${it.quantity}`).join('|');
+                    const orderKey = `${(info.name||'').trim()}|${(info.phone||'').trim()}|${Math.round(orderTotal||0)}|${itemsSig}`;
+                    const prevKey = (()=>{ try { return sessionStorage.getItem('last_order_key')||''; } catch { return ''; } })();
                     const payload = {
                         name: info.name,
                         phone: info.phone,
                         total: Math.round(orderTotal || 0),
                         timestamp: new Date().toISOString(),
+                        id: orderKey
                     };
-                    setTimeout(() => { try { sendOrderToSheetsSilent(payload); } catch {} }, 0);
+                    if (prevKey !== orderKey) {
+                        try { sessionStorage.setItem('last_order_key', orderKey); } catch {}
+                        setTimeout(() => { try { sendOrderToSheetsSilent(payload); } catch {} }, 0);
+                    }
                 } catch {}
             }
 
@@ -830,7 +838,7 @@
                 const fb = (settings.facebookLink || '').trim();
                 const igBtn = document.getElementById('instagram-btn');
                 const fbBtn = document.getElementById('facebook-btn');
-                if (igBtn) igBtn.setAttribute('href', ig || 'https://instagram.com/');
+                if (igBtn) igBtn.setAttribute('href', ig || 'https://www.instagram.com/diet.city_/');
                 if (fbBtn) fbBtn.setAttribute('href', fb || 'https://facebook.com/');
             }
 
@@ -1086,13 +1094,9 @@
              });
     </script>
     <!-- زر السهم للأعلى: يظهر عند التمرير ويعيدك لبداية الأقسام -->
-    <button id="scroll-up-btn" aria-label="العودة إلى الأقسام" class="hidden fixed bottom-20 right-4 z-[200] w-11 h-11 rounded-full bg-red-600/60 text-white shadow-lg hover:bg-red-600/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-400/50 flex items-center justify-center">
+    <button id="scroll-up-btn" aria-label="العودة إلى الأقسام" class="hidden fixed bottom-20 right-4 z-[200] w-11 h-11 rounded-full bg-orange-500/70 text-white shadow-lg hover:bg-orange-500/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 flex items-center justify-center">
         <span class="sr-only">إلى الأقسام</span>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75 12 8.25l7.5 7.5" /></svg>
     </button>
 </body>
 </html>
-
-
-
-

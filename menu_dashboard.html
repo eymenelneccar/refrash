@@ -59,7 +59,7 @@
     .tile-grid { display:flex; flex-wrap:wrap; gap:.75rem; }
     .phone { width:270px; max-width:100%; border-radius:36px; background:#0B0B0B; box-shadow: 0 20px 40px rgba(0,0,0,.25); padding:10px; }
     .phone-screen { border-radius:24px; background:#fff; overflow:hidden; }
-    .phone-screen .iframe-wrap { width:100%; height:520px; overflow:hidden; background:#fff; position:relative; left:8px; top:2px; }
+    .phone-screen .iframe-wrap { width:100%; height:520px; overflow:hidden; background:#fff; position:relative; left:24px; top:2px; }
     .phone-screen .iframe-wrap iframe { display:block; width:125%; height:125%; border:0; background:#fff; transform: scale(0.80); transform-origin: top center; border-radius:24px; }
     .footer-links { font-size:.8rem; color:#4B5563; }
     .footer-links a { color:#2563EB; }
@@ -710,9 +710,8 @@
 
     // حفظ البيانات مباشرة إلى ملف الأصول عبر خادم محلي
     async function saveToServer() {
-      const original = els.btnSave.textContent;
-      els.btnSave.textContent = 'جارِ الحفظ...';
-      els.btnSave.disabled = true;
+      const original = els.btnSave ? els.btnSave.textContent : '';
+      if (els.btnSave) { els.btnSave.textContent = 'جارِ الحفظ...'; els.btnSave.disabled = true; }
       try {
         const resp = await fetch(SAVE_ENDPOINT, {
           method: 'POST',
@@ -720,21 +719,24 @@
           body: JSON.stringify(items)
         });
         if (!resp.ok) throw new Error('فشل الحفظ');
-        els.btnSave.textContent = 'تم الحفظ ✓';
-        setTimeout(() => { els.btnSave.textContent = original; }, 1500);
+        if (els.btnSave) {
+          els.btnSave.textContent = 'تم الحفظ ✓';
+          setTimeout(() => { els.btnSave && (els.btnSave.textContent = original); }, 1500);
+        }
       } catch (e) {
         console.warn(e);
-        els.btnSave.textContent = 'خطأ في الحفظ';
-        setTimeout(() => { els.btnSave.textContent = original; }, 2500);
+        if (els.btnSave) {
+          els.btnSave.textContent = 'خطأ في الحفظ';
+          setTimeout(() => { els.btnSave && (els.btnSave.textContent = original); }, 2500);
+        }
       } finally {
-        els.btnSave.disabled = false;
+        if (els.btnSave) { els.btnSave.disabled = false; }
       }
     }
 
     async function saveAllToServer() {
-      const original = els.btnSave.textContent;
-      els.btnSave.textContent = 'جارِ الحفظ...';
-      els.btnSave.disabled = true;
+      const original = els.btnSave ? els.btnSave.textContent : '';
+      if (els.btnSave) { els.btnSave.textContent = 'جارِ الحفظ...'; els.btnSave.disabled = true; }
       try {
         // حفظ الأصناف
         const respItems = await fetch(SAVE_ENDPOINT, {
@@ -765,13 +767,13 @@
           body: JSON.stringify(govsPayload)
         });
         if (!respGovs.ok) throw new Error('فشل حفظ المحافظات');
-        els.btnSave.textContent = 'تم الحفظ ✓';
+        if (els.btnSave) els.btnSave.textContent = 'تم الحفظ ✓';
       } catch (e) {
         console.warn(e);
-        els.btnSave.textContent = 'خطأ في الحفظ';
+        if (els.btnSave) els.btnSave.textContent = 'خطأ في الحفظ';
       } finally {
-        setTimeout(() => { els.btnSave.textContent = original; }, 1500);
-        els.btnSave.disabled = false;
+        setTimeout(() => { if (els.btnSave) els.btnSave.textContent = original; }, 1500);
+        if (els.btnSave) els.btnSave.disabled = false;
       }
     }
 
@@ -1352,7 +1354,10 @@
       renderItems();
   })();
     async function downloadAssetsZip() {
+      const original = els.btnDownloadAssets ? els.btnDownloadAssets.textContent : '';
+      if (els.btnDownloadAssets) { els.btnDownloadAssets.textContent = 'جارِ التحميل...'; els.btnDownloadAssets.disabled = true; }
       const paths = ['/download/assets', '/download/assets.zip'];
+      let done = false;
       for (const p of paths) {
         try {
           const resp = await fetch(p);
@@ -1366,15 +1371,99 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            return;
+            done = true;
+            break;
           }
         } catch {}
       }
-      alert('تعذّر تنزيل الأصول');
+      if (els.btnDownloadAssets) {
+        els.btnDownloadAssets.textContent = done ? 'تم التحميل ✓' : 'فشل التحميل';
+        els.btnDownloadAssets.disabled = false;
+      }
     }
     if (els.btnDownloadAssets) {
       els.btnDownloadAssets.addEventListener('click', downloadAssetsZip);
     }
+
+    (function initFastInput(){
+      const tiles = document.querySelector('.tiles-xl');
+      if (!tiles) return;
+      const btn = document.createElement('button');
+      btn.id = 'tileFastInput';
+      btn.className = 'tile-action';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10" stroke-width="2" stroke-linecap="round"/></svg>الادخال السريع<span class="sub">ملف خارجي</span>';
+      tiles.appendChild(btn);
+
+      const modal = document.createElement('div');
+      modal.id = 'fastModal';
+      modal.className = 'fixed inset-0 hidden bg-black/40 backdrop-blur-sm';
+      modal.innerHTML = (
+        '<div class="w-full max-w-xl mx-auto mt-24 bg-white rounded-xl shadow-lg overflow-hidden max-h-[85vh] overflow-y-auto">'
+        +'<div class="px-6 py-4 border-b"><h3 class="text-lg font-bold text-primary">الادخال السريع</h3></div>'
+        +'<div class="p-6 space-y-4">'
+        +'<div class="flex items-center gap-2"><button id="btnFastUpload" class="btn btn-outline">رفع ملف</button><span id="fastStatus" class="text-xs text-gray-500"></span></div>'
+        +'<textarea id="fastText" rows="10" class="input w-full" placeholder="اكتب أو الصق القواعد هنا"></textarea>'
+        +'<div class="flex justify-end gap-2"><button id="btnFastClose" class="btn btn-outline">إغلاق</button><button id="btnFastSave" class="btn btn-primary">تحويل وحفظ</button></div>'
+        +'</div>'
+        +'</div>'
+      );
+      document.body.appendChild(modal);
+
+      const fastFileInput = (()=>{ const i=document.createElement('input'); i.type='file'; i.accept='.txt,.md,text/plain'; i.className='hidden'; document.body.appendChild(i); return i; })();
+      const get = id => document.getElementById(id);
+      const openFast = ()=>{ modal.classList.remove('hidden'); };
+      const closeFast = ()=>{ modal.classList.add('hidden'); const t=get('fastText'); const s=get('fastStatus'); if(t) t.value=''; if(s) s.textContent=''; };
+      const parseFast = (text)=>{
+        const lines = String(text||'').split(/\r?\n/).map(l=>l.trim());
+        let curCat = 'أخرى';
+        const out = [];
+        const cats = new Set();
+        let pending = null;
+        const genId = () => Date.now() + Math.floor(Math.random()*1000) + out.length;
+        const flush = () => { if (pending) { out.push(pending); pending = null; } };
+        for (const raw of lines) {
+          if (!raw) continue;
+          if (raw.startsWith('###')) { flush(); curCat = raw.replace(/^###\s*/, '').trim() || curCat; cats.add(curCat); continue; }
+          if (raw.startsWith('##')) { flush(); const name = raw.replace(/^##\s*/, '').trim(); if (name) out.push({ id: genId(), type:'heading', name, category: curCat, price:0, imageUrl:'', description:'' }); continue; }
+          if (raw.startsWith('#')) {
+            flush();
+            let rest = raw.replace(/^#\s*/, '').trim();
+            let name = rest;
+            let price = 0;
+            let variants = [];
+            const ell = rest.indexOf('...');
+            if (ell >= 0) {
+              name = rest.substring(0, ell).trim();
+              const sizes = rest.substring(ell+3).trim();
+              const parts = sizes.split('|').map(p=>p.trim()).filter(Boolean);
+              for (const part of parts) {
+                const m = part.match(/^(.+?)\s+(\d+)/);
+                if (m) variants.push({ key:'v'+genId(), label:m[1].trim(), price:Number(m[2])||0, variantType:'' });
+              }
+              if (variants.length) price = Math.min(...variants.map(v=>v.price));
+            }
+            const idx = rest.indexOf('---');
+            if (idx >= 0) {
+              name = rest.substring(0, idx).trim();
+              const pStr = rest.substring(idx+3).trim();
+              const pNum = Number(String(pStr).replace(/[^0-9]/g,''));
+              if (Number.isFinite(pNum)) price = pNum;
+            }
+            pending = { id: genId(), name, category: curCat, price: price||0, imageUrl:'', description:'', variants };
+            continue;
+          }
+          if (raw.startsWith('>')) { if (pending) pending.description = raw.replace(/^>\s*/, '').trim(); continue; }
+        }
+        flush();
+        return { items: out };
+      };
+
+      btn.addEventListener('click', openFast);
+      get('btnFastClose').addEventListener('click', closeFast);
+      get('btnFastUpload').addEventListener('click', ()=>{ fastFileInput.value=''; fastFileInput.click(); });
+      fastFileInput.addEventListener('change', async ()=>{ const f=fastFileInput.files[0]; if (!f) return; const t= await f.text(); const ta=get('fastText'); const s=get('fastStatus'); if (ta) ta.value=t; if (s) s.textContent='تم التحميل ✓'; });
+      get('btnFastSave').addEventListener('click', async ()=>{ const ta=get('fastText'); const s=get('fastStatus'); const src = ta ? ta.value : ''; const r = parseFast(src); if (Array.isArray(r.items) && r.items.length) { items = r.items; categories = deriveCategoriesFromItems(items); saveCategories(); saveData(); renderItems(); await saveAllToServer(); closeFast(); } else { if (s) s.textContent = 'لا توجد بيانات'; } });
+    })();
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دايت ستي</title>
+    <title>ريفريش كافيه</title>
     <!-- تحميل Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- خط Inter -->
@@ -73,10 +73,10 @@
         }
 </style>
 </head>
-<body class="bg-white font-sans">
+<body class="bg-[#f3efe8] font-sans">
 
     <!-- الحاوية: عرض كامل على الجوال، أوسع على الحواسيب -->
-    <div class="mx-auto min-h-screen bg-white relative pb-24 max-w-full lg:max-w-5xl xl:max-w-6xl shadow-lg lg:shadow-none">
+    <div class="mx-auto min-h-screen bg-[#f3efe8] relative pb-24 max-w-full lg:max-w-5xl xl:max-w-6xl shadow-lg lg:shadow-none">
 
         <!-- الهيدر: العنوان + زر السلة -->
         <!-- header padding: from px-3 to px-2 -->
@@ -89,7 +89,7 @@
                     <span id="sticky-subheading" class="text-sm font-normal text-coffee/70"></span>
                 </div>
                 <!-- العنوان الافتراضي -->
-                <h1 id="site-title" data-default="دايت ستي" class="text-2xl font-bold text-coffee">دايت ستي</h1>
+                <h1 id="site-title" data-default="ريفريش كافيه" class="text-2xl font-bold text-coffee">ريفريش كافيه</h1>
                 <!-- اسم القسم الصغير أسفل العنوان عندما لا يظهر المركّب -->
                 <span id="site-section-name" class="text-xs font-normal text-coffee/60 mt-0.5 hidden"></span>
             </div>
@@ -98,7 +98,7 @@
                     <img src="shopping-bag.png" alt="أيقونة السلة" class="w-8 h-8 object-contain" loading="eager" />
                     <span id="cart-count-bubble" class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full px-2 py-0.5 hidden">0</span>
                 </button>
-                <a href="review.html" class="px-3 py-2 rounded-lg border border-orange-600 text-orange-600 font-bold hover:bg-orange-50 transition-colors">قيمنا</a>
+                <a href="review.html" class="px-3 py-2 rounded-lg border border-[#5c4c3c] text-[#5c4c3c] font-bold hover:bg-[#5c4c3c]/10 transition-colors">قيمنا</a>
             </div>
         </header>
 
@@ -110,7 +110,7 @@
                 <img id="hero-image" src="https://placehold.co/600x400/331A12/FFCC80?text=أطباقنا+المميزة" alt="صورة ترحيبية" class="w-full h-full object-cover opacity-80">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6">
                     <h2 id="hero-title" class="text-3xl font-bold text-white leading-tight">
-                        <span id="hero-title-text">أهلاً بك في</span><br><span id="hero-subtitle">دايت ستي</span>
+                        <span id="hero-title-text">أهلاً بك في</span><br><span id="hero-subtitle">ريفريش كافيه</span>
                     </h2>
                 </div>
             </div>
@@ -140,7 +140,7 @@
             </div>
             <div class="border-t border-coffee/10 text-center text-[11px] text-coffee/60 px-2 py-1">
               تم صنعها بواسطة |
-              <a href="https://iqrarabic.com/" target="_blank" rel="noopener" class="font-semibold text-green-700/80 hover:text-green-800/90 hover:underline">İQR MENU</a>
+              <a href="https://iqrarabic.com/" target="_blank" rel="noopener" class="font-semibold text-[#5c4c3c] hover:text-[#5c4c3c] hover:underline">İQR MENU</a>
             </div>
             <!-- قائمة المزيد المنبثقة -->
             <div id="more-menu" class="hidden fixed bottom-16 left-0 right-0 max-w-lg mx-auto px-3 z-20">
@@ -160,7 +160,7 @@
         <!-- نافذة السلة (مخفية افتراضيًا) -->
         <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" aria-hidden="true">
             <!-- حاوية السلة الجانبية -->
-            <div id="cart-drawer" class="fixed top-0 right-0 w-full max-w-md h-full bg-white z-50 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out">
+            <div id="cart-drawer" class="fixed top-0 right-0 w-full max-w-md h-full bg-[#f3efe8] z-50 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out">
                 
                 <!-- هيدر السلة -->
                 <div id="cart-header" class="flex justify-between items-center p-4 border-b border-coffee/20">
@@ -174,23 +174,23 @@
                 </div>
 
                 <!-- محتويات السلة -->
-                <div id="cart-items" class="p-4 space-y-4 overflow-y-auto">
+                <div id="cart-items" class="p-4 space-y-4 overflow-y-auto bg-white">
                     <!-- سيتم ملء عناصر السلة هنا -->
                     <!-- <p class="text-center text-coffee/70">سلتك فارغة.</p> -->
                 </div>
 
                 <!-- فوتر السلة (الإجمالي والطلب) -->
-                <div id="cart-footer" class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-coffee/20">
+                <div id="cart-footer" class="absolute bottom-0 left-0 right-0 p-4 bg-[#f3efe8] border-t border-coffee/20">
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-lg font-semibold text-coffee">الإجمالي:</span>
-                        <span id="cart-total" class="text-2xl font-bold text-accent">0 د.ع</span>
+                        <span id="cart-total" class="text-2xl font-bold text-[#5c4c3c]">0 د.ع</span>
                     </div>
-                    <button id="submit-order-btn" class="w-full bg-accent text-white py-3 rounded-lg font-bold text-lg hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
+                    <button id="submit-order-btn" class="w-full bg-[#5c4c3c] text-white py-3 rounded-lg font-bold text-lg hover:bg-[#5c4c3c] transition-colors inline-flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M2.25 12c0-4.28 3.47-7.75 7.75-7.75s7.75 3.47 7.75 7.75-3.47 7.75-7.75 7.75S2.25 16.28 2.25 12Zm9.25-3.25a.75.75 0 0 0-1.5 0v3.25c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5V8.75Z"/></svg>
                         إرسال الطلب
                     </button>
                     <div class="text-center text-coffee/60 text-sm my-2">or</div>
-                    <a id="call-order-btn" href="#" class="block w-full text-center border border-accent text-accent py-2 rounded-lg font-bold hover:bg-accent/10 transition-colors inline-flex items-center justify-center gap-2">
+                    <a id="call-order-btn" href="#" class="block w-full text-center border border-[#5c4c3c] text-[#5c4c3c] py-2 rounded-lg font-bold hover:bg-[#5c4c3c]/10 transition-colors inline-flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M2.25 6.75A3 3 0 0 1 5.25 3.75h1.5a2.25 2.25 0 0 1 2.25 2.25v2.25a2.25 2.25 0 0 1-2.25 2.25h-.375a11.25 11.25 0 0 0 6.75 6.75V16.5a2.25 2.25 0 0 1 2.25-2.25h2.25a2.25 2.25 0 0 1 2.25 2.25v1.5a3 3 0 0 1-3 3h-.75c-8.284 0-15-6.716-15-15v-.75Z"/></svg>
                         اطلب عبر اتصال
                     </a>
@@ -387,7 +387,7 @@
                         </svg>
                         <span>الخريطة</span>
                     </button>
-                    <button id="btn-menu" aria-label="فتح المنيو" class="w-16 h-16 -mt-7 rounded-full bg-orange-500 text-white shadow-xl ring-4 ring-orange-300/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
+                    <button id="btn-menu" aria-label="فتح المنيو" class="w-16 h-16 -mt-7 rounded-full bg-[#5c4c3c] text-white shadow-xl ring-4 ring-[#5c4c3c]/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
                         <img src="fast-food.png" alt="منيو" class="w-10 h-10 object-contain filter brightness-0 invert" loading="eager" />
                     </button>
                     <button id="btn-more" class="flex flex-col items-center text-xs text-coffee/80">
@@ -451,7 +451,7 @@
 
                     const itemCard = document.createElement('div');
                     // تغيير: تصميم الكارت من أفقي إلى عمودي (مربع)
-                    itemCard.className = 'bg-[#F5E9D5]/60 rounded-xl shadow-md hover:shadow-lg overflow-hidden flex flex-col animate-slide-up transition duration-300 hover:scale-[1.02]';
+                    itemCard.className = 'bg-[#bb9b7c]/60 rounded-xl shadow-md hover:shadow-lg overflow-hidden flex flex-col animate-slide-up transition duration-300 hover:scale-[1.02]';
                     itemCard.innerHTML = `
                         <div class="relative w-full pt-[80%]">
                             <img src="${item.image}" alt="${item.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw">
@@ -461,7 +461,7 @@
                             <p class="text-sm lg:text-base text-coffee/80 mt-1 break-words flex-1 line-clamp-2">${item.description}</p>
                             <div class="flex justify-between items-center mt-4">
                                 <span class="font-bold text-md lg:text-lg text-coffee whitespace-nowrap">${item.price} د.ع</span>
-                                <button class="add-to-cart-btn bg-orange-500 text-white w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full hover:bg-orange-600 transition-colors flex-shrink-0 touch-manipulation" aria-label="أضف ${item.name} إلى السلة">
+                                <button class="add-to-cart-btn bg-[#5c4c3c] text-white w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full hover:bg-[#5c4c3c] transition-colors flex-shrink-0 touch-manipulation" aria-label="أضف ${item.name} إلى السلة">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
@@ -619,7 +619,7 @@
                 } else {
                     cart.forEach(item => {
                         const cartItem = document.createElement('div');
-                        cartItem.className = 'flex justify-between items-center bg-[#F5E9D5]/40 p-3 rounded-lg';
+                        cartItem.className = 'flex justify-between items-center bg-[#bb9b7c]/40 p-3 rounded-lg';
                         cartItem.innerHTML = `
                             <div class="flex items-start gap-3 flex-1 min-w-0">
                                 <img src="${item.image || 'shopping-bag.png'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
